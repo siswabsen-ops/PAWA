@@ -39,12 +39,22 @@ export default function AsistenCerdas() {
     setLoading(true);
 
     try {
+      const historyPayload = [...messages, userMsg]
+        .filter((m) => m.id !== 'welcome' && !m.id.endsWith('-error'))
+        .map((m) => ({
+          role: m.sender === 'user' ? 'user' : 'model',
+          text: m.text
+        }));
+
       const response = await fetch('/api/gemini/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ prompt: promptToSend })
+        body: JSON.stringify({ 
+          prompt: promptToSend,
+          history: historyPayload
+        })
       });
 
       if (!response.ok) {

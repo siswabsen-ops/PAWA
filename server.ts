@@ -50,7 +50,7 @@ async function startServer() {
   // --- API ROUTE: GEMINI CALLS ---
   app.post("/api/gemini/chat", async (req, res) => {
     try {
-      const { prompt, systemInstruction, model } = req.body;
+      const { prompt, systemInstruction, model, history } = req.body;
 
       if (!prompt) {
         return res.status(400).json({ error: "Prompt is required." });
@@ -72,14 +72,23 @@ async function startServer() {
       const instruction = systemInstruction || 
         "Anda adalah PAWA (Panji Wafa), asisten cerdas multifungsi profesional dengan tagline 'Panduan Andal, Karya Sempurna'. " +
         "Tugas Anda adalah memandu pengguna menghasilkan karya tulisan, naskah film/video, laporan, materi pembelajaran, menerjemahkan naskah, " +
-        "atau merancang petunjuk kreasi bernilai tinggi. " +
-        "Gunakan bahasa Indonesia yang ramah, profesional, ringkas, dan sangat kreatif. " +
+        "dan merancang petunjuk kreasi berkualitas tinggi. " +
+        "Gunakan bahasa Indonesia yang ramah, hangat, profesional, mendalam, dan sangat kreatif. " +
+        "Berikan jawaban yang lengkap, komprehensif, terperinci, dan kaya akan detail praktis. Jangan memberi jawaban yang memotong penjelasan atau terlalu singkat. " +
         "Jika pengguna meminta 'ilustrasi' atau 'desain', buatlah visual dengan membalas menggunakan kode SVG yang valid dan indah bertema modern di dalam blok markdown ```xml\n<svg ...>...</svg>\n``` agar bisa ditampilkan langsung sebagai karya visual di antarmuka PAWA.";
 
-      console.log(`Calling Gemini API using model: ${selectedModel}`);
+      let contents: any = prompt;
+      if (history && Array.isArray(history) && history.length > 0) {
+        contents = history.map((h: any) => ({
+          role: h.role === "user" ? "user" : "model",
+          parts: [{ text: h.text || "" }]
+        }));
+      }
+
+      console.log(`Calling Gemini API using model: ${selectedModel} with contents count: ${Array.isArray(contents) ? contents.length : 1}`);
       const response = await ai.models.generateContent({
         model: selectedModel,
-        contents: prompt,
+        contents: contents,
         config: {
           systemInstruction: instruction,
           temperature: 0.75,
