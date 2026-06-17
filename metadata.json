@@ -1,0 +1,6 @@
+{
+  "name": "PAWA",
+  "description": "Panduan Andal, Karya Sempurna - Asisten cerdas, penyuntingan video, studio musik & vokal dalam satu aplikasi cepat.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
