@@ -8,8 +8,17 @@ import dotenv from "dotenv";
 // Load environment variables
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Safe __filename and __dirname detection for ESM/CJS compatibility without throwing errors
+let currentDir = process.cwd();
+try {
+  if (typeof import.meta !== "undefined" && import.meta.url) {
+    currentDir = path.dirname(fileURLToPath(import.meta.url));
+  } else if (typeof __dirname !== "undefined") {
+    currentDir = __dirname;
+  }
+} catch (e) {
+  // safe fallback
+}
 
 async function startServer() {
   const app = express();
