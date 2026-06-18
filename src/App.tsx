@@ -758,40 +758,7 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Divider */}
-              <div className="relative flex py-1 items-center">
-                <div className="flex-grow border-t border-slate-150"></div>
-                <span className="flex-shrink mx-2 text-[8px] text-slate-400 uppercase font-black tracking-widest">🔑 DAFTAR COBA KODE AKSES SIMULASI 🔑</span>
-                <div className="flex-grow border-t border-slate-150"></div>
-              </div>
-
-              {/* Panduan kode simulasi */}
-              <div className="bg-amber-50/50 rounded-2xl p-3 border border-amber-500/10 text-xs shadow-inner">
-                <div className="grid grid-cols-1 gap-1.5 font-mono text-[10px]">
-                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
-                    <span className="text-slate-500 font-semibold">🛡️ Admin Yayasan:</span>
-                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">YYSN88</strong>
-                  </div>
-                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
-                    <span className="text-slate-500 font-semibold">👳 Ketua LAZ:</span>
-                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs flex-shrink-0">KETUA12</strong>
-                  </div>
-                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
-                    <span className="text-slate-500 font-semibold">💰 Bendahara LAZ:</span>
-                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">BENDA99</strong>
-                  </div>
-                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
-                    <span className="text-slate-500 font-semibold">✍️ Sekretaris:</span>
-                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">SEKRE77</strong>
-                  </div>
-                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
-                    <span className="text-slate-500 font-semibold">🏃 Tim Lapangan:</span>
-                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">LAPNG55</strong>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-center pt-1">
+              <div className="text-center pt-2">
                 <button 
                   type="button"
                   onClick={() => {
@@ -799,7 +766,7 @@ export default function App() {
                     setLoginError('');
                     setLoginCodeInput('');
                   }}
-                  className="text-[10px] text-slate-400 hover:text-slate-600 font-bold underline cursor-pointer"
+                  className="text-[10px] text-slate-450 hover:text-slate-650 font-bold underline cursor-pointer"
                 >
                   Tetap dalam Mode Umum (Donatur / Masyarakat)
                 </button>
