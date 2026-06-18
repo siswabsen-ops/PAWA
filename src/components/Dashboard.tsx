@@ -455,10 +455,10 @@ export default function Dashboard({
 
           <div className="bg-emerald-900 text-white rounded-xl p-3.5 text-center shadow-inner border border-amber-500/20">
             <span className="text-[10px] font-bold uppercase text-amber-300 tracking-widest block mb-1">
-              REKENING RESMI MASJID/MDT
+              REKENING RESMI MASJID/MDT (BANK BRI)
             </span>
-            <p className="font-mono text-sm font-semibold selection:bg-amber-400">BSI: 720.5566.991</p>
-            <span className="text-[10px] text-slate-200 block mt-0.5">an. LAZ Al Jihad Yayasan Al Hamid Hadum</span>
+            <p className="font-mono text-sm font-semibold selection:bg-amber-400">BRI: 4157-01-064388-53-4</p>
+            <span className="text-[10px] text-slate-200 block mt-0.5">an. MDT AL JIHAD</span>
           </div>
         </div>
 

@@ -280,15 +280,28 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                 <button 
                   type="button" 
                   onClick={() => setShowQR(!showQR)}
-                  className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 hover:underline"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 hover:underline cursor-pointer"
                 >
-                  <QrCode className="w-3.5 h-3.5 text-amber-500" /> {showQR ? 'Sembunyikan' : 'Tampilkan'} QRIS Transfer LAZ
+                  <QrCode className="w-3.5 h-3.5 text-amber-500" /> {showQR ? 'Sembunyikan' : 'Tampilkan'} Rekening BRI & QRIS LAZ
                 </button>
               </div>
 
               {showQR && (
-                <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 text-center space-y-2 animate-fade-in">
-                  <span className="text-[10px] font-black tracking-wider text-emerald-900 block">QR PAD LAZ AL JIHAD</span>
+                <div className="bg-slate-50 rounded-xl p-3.5 border border-slate-200 text-center space-y-3 animate-fade-in">
+                  
+                  {/* Rekening BRI Details */}
+                  <div className="bg-white rounded-lg p-2.5 border border-slate-100 shadow-sm text-center">
+                    <span className="text-[9px] font-black uppercase text-amber-600 block tracking-wider">REKENING TRANSFER RESMI</span>
+                    <span className="text-xs font-bold text-slate-800 block mt-0.5">BANK BRI</span>
+                    <span className="text-sm font-mono font-black text-emerald-800 block tracking-wide select-all bg-emerald-50 py-1 my-1 rounded border border-emerald-100/50">
+                      4157-01-064388-53-4
+                    </span>
+                    <span className="text-[10px] text-slate-500 block">a.n. <strong className="text-slate-700">MDT AL JIHAD</strong></span>
+                  </div>
+
+                  <div className="border-t border-slate-200/60 my-1"></div>
+
+                  <span className="text-[10px] font-black tracking-wider text-emerald-950 block">QRIS RESMI LAZ JIHAD</span>
                   
                   {/* Generated QR Mockup */}
                   <div className="mx-auto w-32 h-32 bg-white border border-slate-200 p-2 rounded-lg flex items-center justify-center relative shadow-inner">
@@ -303,11 +316,11 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                       <rect x="70" y="5" width="25" height="25" fill="#047857" />
                       <rect x="74" y="9" width="17" height="17" fill="white" />
                       <rect x="78" y="13" width="9" height="9" fill="#047857" />
-
+ 
                       <rect x="5" y="70" width="25" height="25" fill="#047857" />
                       <rect x="9" y="74" width="17" height="17" fill="white" />
                       <rect x="13" y="78" width="9" height="9" fill="#047857" />
-
+ 
                       {/* Code pixels mock */}
                       <rect x="40" y="10" width="10" height="4" fill="#000" />
                       <rect x="45" y="15" width="15" height="6" fill="#000" />
@@ -318,7 +331,7 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                       <rect x="44" y="44" width="12" height="12" fill="white" />
                       {/* Tiny symbol representation */}
                       <circle cx="50" cy="50" r="4" fill="#d97706" />
-
+ 
                       <rect x="75" y="75" width="20" height="20" fill="#000" />
                       <rect x="79" y="79" width="12" height="12" fill="white" />
                       
@@ -327,7 +340,7 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                       <rect x="70" y="42" width="12" height="16" fill="#000" />
                     </svg>
                   </div>
-                  <p className="text-[10px] text-slate-500">Mendukung BSI Mobile, GoPay, OVO, ShopeePay & LinkAja</p>
+                  <p className="text-[10px] text-slate-500">Mendukung BRImo, BSI Mobile, GoPay, OVO & ShopeePay</p>
                 </div>
               )}
             </form>

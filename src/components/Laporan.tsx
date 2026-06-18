@@ -190,7 +190,7 @@ export default function Laporan({ setoranList, penyaluranList }: LaporanProps) {
             <span className="text-lg font-black text-emerald-900 font-mono mt-1 block">
               {formatRupiah(saldoNetto)}
             </span>
-            <span className="text-[9px] text-slate-500 mt-1 block">Tersimpan di brankas Kantor &amp; Rek virtual BSI</span>
+            <span className="text-[9px] text-slate-500 mt-1 block">Tersimpan di brankas Kantor &amp; Rekening Resmi BANK BRI</span>
           </div>
         </div>
 
@@ -282,7 +282,7 @@ export default function Laporan({ setoranList, penyaluranList }: LaporanProps) {
         {/* Nota Kaki dan Tanda Tangan Kepengurusan */}
         <div className="pt-6 border-t border-slate-300">
           <p className="text-[10px] text-slate-400 italic text-center leading-relaxed">
-            Laporan ini disusun secara otomatis oleh Sistem Terpadu LAZ MDT Al Jihad yang berada di bawah pengawasan langsung Dewan Syariah Pengurus Yayasan Al Hamid Hadum. Semua angka dapat dicocokkan langsung ke slip fisik atau nomor mutasi BSI.
+            Laporan ini disusun secara otomatis oleh Sistem Terpadu LAZ MDT Al Jihad yang berada di bawah pengawasan langsung Dewan Syariah Pengurus Yayasan Al Hamid Hadum. Semua angka dapat dicocokkan langsung ke slip fisik atau nomor mutasi BANK BRI.
           </p>
 
           <div className="grid grid-cols-3 gap-4 text-xs text-center pt-6">
