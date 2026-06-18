@@ -13,14 +13,15 @@ import {
   CheckCircle2,
   TableProperties
 } from 'lucide-react';
-import { SetoranDana, PenyaluranDana, DanaType } from '../types';
+import { SetoranDana, PenyaluranDana, DanaType, UserRole } from '../types';
 
 interface LaporanProps {
   setoranList: SetoranDana[];
   penyaluranList: PenyaluranDana[];
+  userRole?: UserRole;
 }
 
-export default function Laporan({ setoranList, penyaluranList }: LaporanProps) {
+export default function Laporan({ setoranList, penyaluranList, userRole }: LaporanProps) {
   const [laporanPeriode, setLaporanPeriode] = useState<'Harian' | 'Bulanan' | 'Triwulan' | 'Tahunan'>('Bulanan');
   const [laporanDestinasi, setLaporanDestinasi] = useState<'Semua' | 'Yayasan' | 'BAZNAS' | 'Publikasi'>('Semua');
 
@@ -240,44 +241,53 @@ export default function Laporan({ setoranList, penyaluranList }: LaporanProps) {
         </div>
 
         {/* Lembaran Audit Jejak Transaksi (Auditable Ledger Tracing) */}
-        <div className="space-y-3 pt-3 border-t border-slate-100">
-          <h4 className="text-xs font-bold text-slate-700 uppercase flex items-center gap-1">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-            Lampiran II: Jejak Riwayat Setoran Terakhir (Minyak Pelacak Audit)
-          </h4>
-
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-[11px] text-slate-600">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50 font-bold text-slate-500">
-                  <th className="p-2">No. Kwitansi</th>
-                  <th className="p-2">Nama Muzakki</th>
-                  <th className="p-2">Tipe Dana</th>
-                  <th className="p-2">Keterangan Setoran</th>
-                  <th className="p-2 text-right">Jumlah</th>
-                  <th className="p-2 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {setoranList.slice(-6).map((s) => (
-                  <tr key={s.id} className="border-b border-slate-100">
-                    <td className="p-2 font-mono font-bold text-emerald-800">{s.noKwitansi}</td>
-                    <td className="p-2 font-medium text-slate-800">{s.muzakkiName}</td>
-                    <td className="p-2">{s.type}</td>
-                    <td className="p-2 italic text-[10px]">"{s.keterangan}"</td>
-                    <td className="p-2 text-right font-bold font-mono text-slate-900">{formatRupiah(s.amount)}</td>
-                    <td className="p-2 text-center text-emerald-700 font-bold">✓ SAH</td>
-                  </tr>
-                ))}
-                {setoranList.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="text-center py-4 text-slate-400 font-light">Belum ada rincian setoran sah.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {userRole === 'admin_yayasan' ? (
+          <div className="bg-slate-50 border border-slate-150 rounded-2xl p-5 text-center space-y-2 mt-4">
+            <span className="text-emerald-800 text-xs font-black tracking-widest uppercase block">🔒 PROTOKOL PRIVASI INDIVIDUAL</span>
+            <p className="text-[11px] text-slate-500 max-w-lg mx-auto">
+              Sesuai dengan hak akses pengawasan <strong>Admin Yayasan</strong>, rincian slip harian dan data personal muzakki disangkal untuk kepatuhan perlindungan data publik. Hubungi Amil Bendahara umum untuk otorisasi pembukuan Excel/CSV lengkap.
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="space-y-3 pt-3 border-t border-slate-100">
+            <h4 className="text-xs font-bold text-slate-700 uppercase flex items-center gap-1">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              Lampiran II: Jejak Riwayat Setoran Terakhir (Minyak Pelacak Audit)
+            </h4>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-[11px] text-slate-600">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 font-bold text-slate-500">
+                    <th className="p-2">No. Kwitansi</th>
+                    <th className="p-2">Nama Muzakki</th>
+                    <th className="p-2">Tipe Dana</th>
+                    <th className="p-2">Keterangan Setoran</th>
+                    <th className="p-2 text-right">Jumlah</th>
+                    <th className="p-2 text-center">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {setoranList.slice(-6).map((s) => (
+                    <tr key={s.id} className="border-b border-slate-100">
+                      <td className="p-2 font-mono font-bold text-emerald-800">{s.noKwitansi}</td>
+                      <td className="p-2 font-medium text-slate-800">{s.muzakkiName}</td>
+                      <td className="p-2">{s.type}</td>
+                      <td className="p-2 italic text-[10px]">"{s.keterangan}"</td>
+                      <td className="p-2 text-right font-bold font-mono text-slate-900">{formatRupiah(s.amount)}</td>
+                      <td className="p-2 text-center text-emerald-700 font-bold">✓ SAH</td>
+                    </tr>
+                  ))}
+                  {setoranList.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4 text-slate-400 font-light">Belum ada rincian setoran sah.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Nota Kaki dan Tanda Tangan Kepengurusan */}
         <div className="pt-6 border-t border-slate-300">

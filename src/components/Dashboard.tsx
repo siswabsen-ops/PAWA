@@ -14,20 +14,22 @@ import {
   Calendar,
   Layers
 } from 'lucide-react';
-import { SetoranDana, MustahikProfile, PenyaluranDana, DanaType } from '../types';
+import { SetoranDana, MustahikProfile, PenyaluranDana, DanaType, UserRole } from '../types';
 
 interface DashboardProps {
   setoranList: SetoranDana[];
   mustahikList: MustahikProfile[];
   penyaluranList: PenyaluranDana[];
   onNavigate: (tab: string) => void;
+  userRole?: UserRole;
 }
 
 export default function Dashboard({ 
   setoranList, 
   mustahikList, 
   penyaluranList,
-  onNavigate 
+  onNavigate,
+  userRole
 }: DashboardProps) {
   const [fitrahKalkulasi, setFitrahKalkulasi] = useState<number>(45000); // Rp per jiwa standar
   const [jumlahJiwa, setJumlahJiwa] = useState<string>('4');
@@ -376,55 +378,101 @@ export default function Dashboard({
       {/* Bawah: Daftar Transaksi Terakhir & Keunggulan Al-Jihad */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Transaksi Terakhir */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <h3 className="font-display font-semibold text-slate-900">Setoran Penghimpunan Terbaru</h3>
-              <p className="text-xs text-slate-400">Arus masuk dana dari para Muzakki & Munfiq dan amalan kebajikan</p>
+        {userRole === 'admin_yayasan' ? (
+          /* High-Level Monitoring Summary instead of detail transaction list */
+          <div className="lg:col-span-2 bg-gradient-to-br from-emerald-900 to-emerald-950 text-white rounded-3xl p-6 md:p-8 border-b-4 border-amber-500 shadow-lg flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-y-1/4 translate-x-1/4">
+              <Building2 className="w-64 h-64" />
             </div>
-            <button 
-              onClick={() => onNavigate('penghimpunan')}
-              className="text-xs text-emerald-800 font-bold hover:underline"
-            >
-              Kelola Setoran &rarr;
-            </button>
+            
+            <div className="relative z-10 space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-400/20 text-amber-300 rounded-full text-[10px] font-black uppercase tracking-wider border border-amber-300/20">
+                🛡️ MONITORING MODE KEPENGURUSAN YAYASAN
+              </span>
+              <h3 className="font-display text-xl font-black uppercase tracking-tight text-white leading-snug">
+                IKHTISAR KEUANGAN AMANAH REAL-TIME
+              </h3>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
+                Halo <strong>Yusuf Wafa Wibowo, S.Ag</strong>. Anda sedang mengakses dalam mode Pengawas Utama (Admin Yayasan). Sesuai dengan instruksi, menu operasional detail penambahan/pengeditan data disembunyikan. Anda disajikan data ringkasan utuh dari seluruh pos dana filantropi secara transparan dan akuntabel.
+              </p>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4 text-xs font-mono">
+                <div className="p-3 bg-emerald-950/60 rounded-xl border border-emerald-800">
+                  <span className="text-[9px] text-slate-400 block font-bold uppercase">Sensus Muzakki</span>
+                  <strong className="text-amber-300 text-sm">{setoranList.filter((v,i,a) => a.findIndex(t => t.muzakkiName === v.muzakkiName) === i).length} Nama</strong>
+                </div>
+                <div className="p-3 bg-emerald-950/60 rounded-xl border border-emerald-800">
+                  <span className="text-[9px] text-slate-400 block font-bold uppercase">Target Penyaluran</span>
+                  <strong className="text-amber-300 text-sm">{mustahikList.length} Mustahik</strong>
+                </div>
+                <div className="p-3 bg-emerald-950/60 rounded-xl border border-emerald-900 col-span-2 md:col-span-1">
+                  <span className="text-[9px] text-slate-400 block font-bold uppercase">Kepatuhan Audit</span>
+                  <strong className="text-emerald-300 text-sm">✓ Sesuai Syariah</strong>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 pt-4 border-t border-emerald-800/60 flex justify-between items-center text-[10px] text-slate-400 relative z-10">
+              <span>Sistem Pencatatan LAZ Al Jihad Digital Terpadu</span>
+              <button 
+                onClick={() => onNavigate('laporan')}
+                className="text-amber-400 font-bold hover:underline flex items-center gap-1"
+              >
+                Tinjau Laporan Rekapitulasi &rarr;
+              </button>
+            </div>
           </div>
+        ) : (
+          /* Normal detailed transaction table for other management roles & guests */
+          <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-display font-semibold text-slate-900">Setoran Penghimpunan Terbaru</h3>
+                <p className="text-xs text-slate-400">Arus masuk dana dari para Muzakki & Munfiq dan amalan kebajikan</p>
+              </div>
+              <button 
+                onClick={() => onNavigate('penghimpunan')}
+                className="text-xs text-emerald-800 font-bold hover:underline"
+              >
+                Kelola Setoran &rarr;
+              </button>
+            </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-slate-100 text-slate-400 uppercase font-semibold text-[10px]">
-                  <th className="py-2">No. Kwitansi</th>
-                  <th className="py-2">Muzakki</th>
-                  <th className="py-2">Jenis Dana</th>
-                  <th className="py-2">Jumlah</th>
-                  <th className="py-2">Tanggal</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {setoranList.slice(-4).reverse().map((s) => (
-                  <tr key={s.id} className="hover:bg-slate-50">
-                    <td className="py-2.5 font-mono text-emerald-800">{s.noKwitansi}</td>
-                    <td className="py-2.5 font-medium text-slate-800">{s.muzakkiName}</td>
-                    <td className="py-2.5">
-                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold">
-                        {s.type}
-                      </span>
-                    </td>
-                    <td className="py-2.5 font-bold text-slate-900">{formatRupiah(s.amount)}</td>
-                    <td className="py-2.5 text-slate-400">{s.tanggal}</td>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 text-slate-400 uppercase font-semibold text-[10px]">
+                    <th className="py-2">No. Kwitansi</th>
+                    <th className="py-2">Muzakki</th>
+                    <th className="py-2">Jenis Dana</th>
+                    <th className="py-2">Jumlah</th>
+                    <th className="py-2">Tanggal</th>
                   </tr>
-                ))}
-                {setoranList.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-4 text-center text-slate-400 font-light">Belum ada dana masuk yang diinput.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {setoranList.slice(-4).reverse().map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-50">
+                      <td className="py-2.5 font-mono text-emerald-800">{s.noKwitansi}</td>
+                      <td className="py-2.5 font-medium text-slate-800">{s.muzakkiName}</td>
+                      <td className="py-2.5">
+                        <span className="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[10px] font-bold">
+                          {s.type}
+                        </span>
+                      </td>
+                      <td className="py-2.5 font-bold text-slate-900">{formatRupiah(s.amount)}</td>
+                      <td className="py-2.5 text-slate-400">{s.tanggal}</td>
+                    </tr>
+                  ))}
+                  {setoranList.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="py-4 text-center text-slate-400 font-light">Belum ada dana masuk yang diinput.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Panel Informasi Struktur Yayasan Al Hamid Hadum */}
         <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">

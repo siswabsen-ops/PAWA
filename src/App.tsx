@@ -16,7 +16,10 @@ import {
   BadgeInfo,
   ExternalLink,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Lock,
+  Unlock,
+  Key
 } from 'lucide-react';
 
 import Dashboard from './components/Dashboard';
@@ -190,14 +193,85 @@ const INITIAL_PENYALURAN: PenyaluranDana[] = [
   }
 ];
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
-  const [currentUser, setCurrentUser] = useState<UserProfile>({
-    username: 'amil_wafa',
+const ROLE_CODES = {
+  'YYSN88': {
+    role: 'admin_yayasan' as UserRole,
+    username: 'amil_yayasan',
     fullName: 'Yusuf Wafa Wibowo, S.Ag',
-    role: 'admin_yayasan',
-    email: 'admin.aljihad@gmail.com'
+    email: 'admin.aljihad@gmail.com',
+    label: 'Admin Yayasan'
+  },
+  'KETUA12': {
+    role: 'ketua_laz' as UserRole,
+    username: 'amil_ketua',
+    fullName: 'Ustadz Al Hamid, M.Ag',
+    email: 'ketua.aljihad@gmail.com',
+    label: 'Ketua LAZ'
+  },
+  'BENDA99': {
+    role: 'bendahara' as UserRole,
+    username: 'amil_bendahara',
+    fullName: 'Ustadzah Nurul Inayah, S.E.I',
+    email: 'bendahara.aljihad@gmail.com',
+    label: 'Bendahara LAZ'
+  },
+  'SEKRE77': {
+    role: 'sekretaris' as UserRole,
+    username: 'amil_sekretaris',
+    fullName: 'Siti Khalimah, S.Pd',
+    email: 'sekretaris.aljihad@gmail.com',
+    label: 'Sekretaris'
+  },
+  'LAPNG55': {
+    role: 'bidang_lapangan' as UserRole,
+    username: 'amil_lapangan',
+    fullName: 'Fahmi Siddiq',
+    email: 'lapangan.aljihad@gmail.com',
+    label: 'Tim Lapangan'
+  }
+};
+
+const TAB_VISIBILITY: Record<UserRole, string[]> = {
+  admin_yayasan: ['dashboard', 'laporan', 'profil', 'asisten'],
+  ketua_laz: ['dashboard', 'penghimpunan', 'mustahik', 'penyaluran', 'laporan', 'profil', 'asisten'],
+  bendahara: ['dashboard', 'penghimpunan', 'penyaluran', 'laporan', 'profil', 'asisten'],
+  sekretaris: ['dashboard', 'penghimpunan', 'mustahik', 'laporan', 'profil', 'asisten'],
+  bidang_lapangan: ['dashboard', 'penyaluran', 'laporan', 'profil', 'asisten'],
+  donatur: ['dashboard', 'penghimpunan', 'laporan', 'profil', 'asisten'],
+};
+
+export default function App() {
+  const [activeTab, setActiveTab ] = useState<string>('dashboard');
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
+    const saved = localStorage.getItem('laz_aljihad_user');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return {
+      username: 'umum_donatur',
+      fullName: 'Masyarakat / Donatur Umum',
+      role: 'donatur',
+      email: 'mdtaljihad2026@gmail.com'
+    };
   });
+
+  // State Dialog Login Pengurus
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginCodeInput, setLoginCodeInput] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [loginSuccess, setLoginSuccess] = useState('');
+
+  // Auto-redirect jika tab tersimpan tidak diperbolehkan untuk peran saat ini
+  useEffect(() => {
+    const allowed = TAB_VISIBILITY[currentUser.role] || ['dashboard', 'profil'];
+    if (!allowed.includes(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [currentUser.role, activeTab]);
 
   // State Keuangan & Data Utama
   const [setoranList, setSetoranList] = useState<SetoranDana[]>(() => {
@@ -264,21 +338,49 @@ export default function App() {
     }));
   };
 
-  const handleRoleChange = (role: UserRole) => {
-    const namesMap: Record<UserRole, string> = {
-      'admin_yayasan': 'Yusuf Wafa Wibowo, S.Ag (Yayasan)',
-      'ketua_laz': 'Ustadz Al Hamid, M.Ag (Ketua)',
-      'bendahara': 'Ustadzah Nurul Inayah, S.E.I (Bendahara)',
-      'sekretaris': 'Siti Khalimah, S.Pd (Sekretaris)',
-      'bidang_lapangan': 'Fahmi Siddiq (Tim Lapangan)',
-      'donatur': 'Bpk. Donatur Budiman'
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setLoginSuccess('');
+
+    const code = loginCodeInput.trim().toUpperCase();
+    if (!code) {
+      setLoginError('Silakan masukkan kode akses pengurus.');
+      return;
+    }
+
+    const found = ROLE_CODES[code as keyof typeof ROLE_CODES];
+    if (found) {
+      const newUser: UserProfile = {
+        username: found.username,
+        fullName: found.fullName,
+        role: found.role,
+        email: found.email
+      };
+      setCurrentUser(newUser);
+      localStorage.setItem('laz_aljihad_user', JSON.stringify(newUser));
+      setLoginSuccess(`Berhasill masuk sebagai ${found.label}!`);
+      
+      setTimeout(() => {
+        setLoginCodeInput('');
+        setLoginSuccess('');
+        setShowLoginModal(false);
+      }, 1200);
+    } else {
+      setLoginError('Kode akses salah atau tidak terdaftar. Silakan lihat daftar kode panduan di bawah.');
+    }
+  };
+
+  const handleLogout = () => {
+    const guestUser: UserProfile = {
+      username: 'umum_donatur',
+      fullName: 'Masyarakat / Donatur Umum',
+      role: 'donatur',
+      email: 'mdtaljihad2026@gmail.com'
     };
-    setCurrentUser({
-      username: `amil_${role}`,
-      fullName: namesMap[role],
-      role: role,
-      email: `${role}.aljihad@gmail.com`
-    });
+    setCurrentUser(guestUser);
+    localStorage.removeItem('laz_aljihad_user');
+    setActiveTab('dashboard');
   };
 
   // Kalkulasi total zakat fitrah & zakat mal terkumpul untuk memverifikasi capping 12.5% Amil
@@ -313,29 +415,48 @@ export default function App() {
           </div>
         </div>
 
-        {/* Roles Swapper for "Sistem Hak Akses Berjenjang" simulation */}
+        {/* Sistem Login/Logout Pengurus Berjenjang */}
         <div className="flex items-center gap-2">
           
-          <div className="hidden lg:flex flex-col text-right text-xs pr-2 border-r border-emerald-700">
-            <span className="text-amber-300 font-bold block text-[10px] uppercase">AKSES SAAT INI</span>
-            <span className="text-white font-semibold">{currentUser.fullName}</span>
-          </div>
+          {currentUser.role !== 'donatur' ? (
+            // State: Terautentikasi (Pengurus)
+            <div className="flex items-center gap-2 bg-emerald-950/40 p-1.5 md:p-2 rounded-2xl border border-emerald-500/20">
+              <div className="hidden md:flex flex-col text-right text-[11px] pr-2 border-r border-emerald-700/60">
+                <span className="text-amber-400 font-black text-[9px] uppercase tracking-wider block">PENGURUS TERKAIT</span>
+                <span className="text-white font-bold">{currentUser.fullName}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="px-2 py-0.5 bg-amber-400/10 text-amber-300 font-black rounded text-[9px] uppercase border border-amber-400/20">
+                  {currentUser.role === 'admin_yayasan' && '🛡️ Admin Yayasan'}
+                  {currentUser.role === 'ketua_laz' && '👳 Ketua LAZ'}
+                  {currentUser.role === 'bendahara' && '💰 Bendahara'}
+                  {currentUser.role === 'sekretaris' && '✍️ Sekretaris'}
+                  {currentUser.role === 'bidang_lapangan' && '🏃 Lapangan'}
+                </span>
+                <button 
+                  onClick={handleLogout}
+                  className="bg-red-700 hover:bg-red-800 text-white font-extrabold text-[10px] uppercase py-1 px-2 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                  title="Keluar dari sistem pengurus"
+                >
+                  <LogOut className="w-3 h-3" /> Keluar
+                </button>
+              </div>
+            </div>
+          ) : (
+            // State: Mode Umum (Masyarakat / Guest)
+            <div className="flex items-center gap-1.5">
+              <span className="hidden sm:inline-block px-2.5 py-1 bg-emerald-950/50 text-emerald-300 rounded-lg text-[10.5px] font-bold border border-emerald-800">
+                🌐 Mode Publik (Donatur / Umum)
+              </span>
+              <button 
+                onClick={() => setShowLoginModal(true)}
+                className="bg-amber-500 hover:bg-amber-600 active:transform active:scale-95 text-emerald-950 font-black text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer border border-amber-400"
+              >
+                <Lock className="w-3.5 h-3.5 shrink-0" /> Masuk Pengurus
+              </button>
+            </div>
+          )}
 
-          <div className="bg-emerald-950/60 p-1 rounded-xl border border-emerald-600/30 flex items-center gap-1.5">
-            <span className="hidden sm:inline text-[9px] font-black text-emerald-300 px-2 uppercase tracking-wider">Pilih Peran:</span>
-            <select 
-              value={currentUser.role}
-              onChange={(e) => handleRoleChange(e.target.value as UserRole)}
-              className="bg-emerald-900 text-white font-bold text-xs p-1 px-2 border-none outline-none rounded-lg cursor-pointer focus:ring-1 focus:ring-amber-400 font-medium"
-            >
-              <option value="admin_yayasan">🛡️ Admin Yayasan</option>
-              <option value="ketua_laz">👳 Ketua LAZ</option>
-              <option value="bendahara">💰 Bendahara LAZ</option>
-              <option value="sekretaris">✍️ Sekretaris</option>
-              <option value="bidang_lapangan">🏃 Lapangan</option>
-              <option value="donatur">👤 Donatur / Umum</option>
-            </select>
-          </div>
         </div>
 
       </nav>
@@ -351,103 +472,117 @@ export default function App() {
               <span className="text-[10px] font-bold text-slate-400 block mb-2 uppercase tracking-widest">MENU UTAMA</span>
               <div className="flex flex-col gap-1.5">
                 
-                <button 
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'dashboard' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Building2 className="w-4 h-4" /> Ikhtisar Beranda
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('dashboard') && (
+                  <button 
+                    onClick={() => setActiveTab('dashboard')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'dashboard' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Building2 className="w-4 h-4" /> Ikhtisar Beranda
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
-                <button 
-                  onClick={() => setActiveTab('penghimpunan')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'penghimpunan' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4" /> Penghimpunan Kas
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('penghimpunan') && (
+                  <button 
+                    onClick={() => setActiveTab('penghimpunan')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'penghimpunan' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" /> Penghimpunan Kas
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
-                <button 
-                  onClick={() => setActiveTab('mustahik')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'mustahik' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Users className="w-4 h-4" /> Mustahik (8 Asnaf)
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('mustahik') && (
+                  <button 
+                    onClick={() => setActiveTab('mustahik')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'mustahik' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Users className="w-4 h-4" /> Mustahik (8 Asnaf)
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
-                <button 
-                  onClick={() => setActiveTab('penyaluran')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'penyaluran' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <HeartHandshake className="w-4 h-4" /> Penyaluran Dana
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('penyaluran') && (
+                  <button 
+                    onClick={() => setActiveTab('penyaluran')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'penyaluran' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <HeartHandshake className="w-4 h-4" /> Penyaluran Dana
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
-                <button 
-                  onClick={() => setActiveTab('laporan')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'laporan' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <FileCheck className="w-4 h-4" /> Laporan Real-Time
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('laporan') && (
+                  <button 
+                    onClick={() => setActiveTab('laporan')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'laporan' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <FileCheck className="w-4 h-4" /> Laporan Real-Time
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
-                <button 
-                  onClick={() => setActiveTab('asisten')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'asisten' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" /> Asisten AI &amp; Bantuan
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('asisten') && (
+                  <button 
+                    onClick={() => setActiveTab('asisten')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'asisten' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" /> Asisten AI &amp; Bantuan
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
-                <button 
-                  onClick={() => setActiveTab('profil')}
-                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                    activeTab === 'profil' 
-                      ? 'bg-emerald-800 text-white shadow' 
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <BadgeInfo className="w-4 h-4 text-amber-500" /> Profil LAZ Jihad
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
-                </button>
+                {TAB_VISIBILITY[currentUser.role]?.includes('profil') && (
+                  <button 
+                    onClick={() => setActiveTab('profil')}
+                    className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                      activeTab === 'profil' 
+                        ? 'bg-emerald-800 text-white shadow' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <BadgeInfo className="w-4 h-4 text-amber-500" /> Profil LAZ Jihad
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                  </button>
+                )}
 
               </div>
             </div>
@@ -492,6 +627,7 @@ export default function App() {
               mustahikList={mustahikList}
               penyaluranList={penyaluranList}
               onNavigate={(tab) => setActiveTab(tab)}
+              userRole={currentUser.role}
             />
           )}
 
@@ -528,6 +664,7 @@ export default function App() {
             <Laporan 
               setoranList={setoranList}
               penyaluranList={penyaluranList}
+              userRole={currentUser.role}
             />
           )}
 
@@ -544,6 +681,135 @@ export default function App() {
         </main>
 
       </div>
+
+      {/* DIALOG/MODAL LOGIN PENGURUS */}
+      {showLoginModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] flex items-center justify-center p-4 animate-fade-in" id="login_modal">
+          <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 max-w-md w-full overflow-hidden relative" onClick={(e) => e.stopPropagation()}>
+            
+            {/* Header Dialog */}
+            <div className="bg-gradient-to-r from-emerald-800 to-emerald-950 text-white p-5 border-b-2 border-amber-400 relative">
+              <div className="absolute right-4 top-4">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setLoginError('');
+                    setLoginSuccess('');
+                    setLoginCodeInput('');
+                  }}
+                  className="text-slate-300 hover:text-white text-lg font-bold w-7 h-7 rounded-full bg-black/10 flex items-center justify-center transition-all cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-amber-400/10 text-amber-300 rounded-xl border border-amber-300/20">
+                  <Lock className="w-5 h-5 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-display font-black text-xs md:text-sm uppercase tracking-tight">KREDENSIAL HAK AKSES PENGURUS</h3>
+                  <p className="text-[10px] text-slate-300 font-normal">Masukkan kode penugasan resmi LAZ MDT Al Jihad</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Form */}
+            <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
+              
+              {loginError && (
+                <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-[10px] font-semibold flex items-start gap-2 animate-bounce">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-650 mt-0.5" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              {loginSuccess && (
+                <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl p-3 text-[10px] font-bold flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 animate-bounce" />
+                  <span>{loginSuccess}</span>
+                </div>
+              )}
+
+              <div className="space-y-1.5">
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">MASUKKAN KODE PIN PENGURUS</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Key className="w-4 h-4" />
+                  </div>
+                  <input 
+                    type="password"
+                    placeholder="Contoh kode: KETUA12"
+                    value={loginCodeInput}
+                    onChange={(e) => setLoginCodeInput(e.target.value)}
+                    required
+                    className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-250 rounded-xl text-xs font-mono font-black focus:bg-white focus:ring-2 focus:ring-emerald-800 focus:border-emerald-800 outline-none transition-all uppercase placeholder:normal-case tracking-widest text-slate-900 shadow-inner"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              <div className="pt-1 select-none">
+                <button 
+                  type="submit"
+                  className="w-full bg-emerald-800 hover:bg-emerald-900 text-white font-black text-xs py-3 rounded-xl transition-all shadow-md flex items-center justify-center gap-1.5 cursor-pointer transform active:scale-95"
+                >
+                  <Unlock className="w-3.5 h-3.5" /> Verifikasi Akses Masuk
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="relative flex py-1 items-center">
+                <div className="flex-grow border-t border-slate-150"></div>
+                <span className="flex-shrink mx-2 text-[8px] text-slate-400 uppercase font-black tracking-widest">🔑 DAFTAR COBA KODE AKSES SIMULASI 🔑</span>
+                <div className="flex-grow border-t border-slate-150"></div>
+              </div>
+
+              {/* Panduan kode simulasi */}
+              <div className="bg-amber-50/50 rounded-2xl p-3 border border-amber-500/10 text-xs shadow-inner">
+                <div className="grid grid-cols-1 gap-1.5 font-mono text-[10px]">
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                    <span className="text-slate-500 font-semibold">🛡️ Admin Yayasan:</span>
+                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">YYSN88</strong>
+                  </div>
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                    <span className="text-slate-500 font-semibold">👳 Ketua LAZ:</span>
+                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs flex-shrink-0">KETUA12</strong>
+                  </div>
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                    <span className="text-slate-500 font-semibold">💰 Bendahara LAZ:</span>
+                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">BENDA99</strong>
+                  </div>
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                    <span className="text-slate-500 font-semibold">✍️ Sekretaris:</span>
+                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">SEKRE77</strong>
+                  </div>
+                  <div className="flex justify-between items-center bg-white px-2.5 py-1.5 rounded-lg border border-slate-100 shadow-sm">
+                    <span className="text-slate-500 font-semibold">🏃 Tim Lapangan:</span>
+                    <strong className="text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100/50 select-all font-black text-xs">LAPNG55</strong>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center pt-1">
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    setLoginError('');
+                    setLoginCodeInput('');
+                  }}
+                  className="text-[10px] text-slate-400 hover:text-slate-600 font-bold underline cursor-pointer"
+                >
+                  Tetap dalam Mode Umum (Donatur / Masyarakat)
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );
