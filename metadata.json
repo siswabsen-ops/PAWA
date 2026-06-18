@@ -1,6 +1,6 @@
 {
-  "name": "PAWA",
-  "description": "Panduan Andal, Karya Sempurna - Asisten cerdas, penyuntingan video, studio musik & vokal dalam satu aplikasi cepat.",
+  "name": "LAZ AL JIHAD",
+  "description": "Sistem Manajemen Terpadu untuk Lembaga Amil Zakat, Infak dan Sedekah MDT Al Jihad di bawah Yayasan Al Hamid Hadum.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

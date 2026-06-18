@@ -1,46 +1,54 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, Copy, Download, FileText, Printer, Check, CornerDownLeft, Eye } from 'lucide-react';
-import { Message } from '../types';
+import React, { useState } from 'react';
+import { 
+  Compass, 
+  Send, 
+  Sparkles, 
+  BookOpen, 
+  HelpCircle, 
+  Key, 
+  CheckCircle,
+  Brain,
+  MessageSquare,
+  ArrowRight,
+  ShieldAlert,
+  Loader2
+} from 'lucide-react';
+import { ChatMessage } from '../types';
 
-export default function AsistenCerdas() {
-  const [messages, setMessages] = useState<Message[]>([
+interface AsistenCerdasProps {
+  userRole: string;
+}
+
+export default function AsistenCerdas({ userRole }: AsistenCerdasProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'welcome',
-      sender: 'pawa',
-      text: 'Halo! Saya adalah PAWA (Panji Wafa), asisten cerdas Anda. Saya siap membantu Anda menyusun naskah video sinematik, menerjemahkan dokumen, memformulasikan konsep belajar-mengajar, atau membuat karya ilustrasi desain gratis. Coba letakkan ide Anda atau klik tombol asisten cepat di bawah!',
-      timestamp: new Date()
+      sender: 'assistant',
+      text: 'Assalamualaikum wr. wb. Saya Asisten Cerdas PAWA (Panduan Andal, Karya Sempurna) untuk LAZ MDT Al Jihad. Saya siap membantu Anda memahami hukum Fiqih Zakat, batas amil, memformulasikan naskah sosialisasi amaliah, atau memandu langkah operasional sistem ini. Ada yang bisa saya bantu hari ini?',
+      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     }
   ]);
-  const [input, setInput] = useState('');
+  const [inputVal, setInputVal] = useState('');
   const [loading, setLoading] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
-
-  const handleSend = async (customPrompt?: string) => {
-    const promptToSend = customPrompt || input.trim();
-    if (!promptToSend) return;
-
-    if (!customPrompt) {
-      setInput('');
-    }
-
-    const userMsg: Message = {
-      id: Date.now().toString() + '-user',
+  // Quick Action triggers
+  const promptAsisten = async (queryText: string) => {
+    if (loading) return;
+    
+    const userMsg: ChatMessage = {
+      id: Math.random().toString(),
       sender: 'user',
-      text: promptToSend,
-      timestamp: new Date()
+      text: queryText,
+      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
+    setInputVal('');
     setLoading(true);
 
     try {
       const historyPayload = [...messages, userMsg]
-        .filter((m) => m.id !== 'welcome' && !m.id.endsWith('-error'))
+        .filter((m) => m.id !== 'welcome')
         .map((m) => ({
           role: m.sender === 'user' ? 'user' : 'model',
           text: m.text
@@ -52,293 +60,194 @@ export default function AsistenCerdas() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ 
-          prompt: promptToSend,
+          prompt: queryText,
           history: historyPayload
         })
       });
 
       if (!response.ok) {
-        throw new Error('Gagal menghubungi pelayan PAWA.');
+        throw new Error('Gagal menghubungi asisten pintar.');
       }
 
       const data = await response.json();
-      const text = data.text;
+      const replyText = data.text || 'Maaf, saya tidak dapat merespons saat ini. Sila coba beberapa saat lagi.';
 
-      // Detect SVG block
-      const svgMatch = text.match(/```(?:xml|html|svg)?\s*(<svg[\s\S]*?<\/svg>)\s*```/i) || text.match(/(<svg[^>]*>[\s\S]*?<\/svg>)/i);
-      
-      const pawaMsg: Message = {
-        id: Date.now().toString() + '-pawa',
-        sender: 'pawa',
-        text: text,
-        timestamp: new Date(),
-        isSvg: !!svgMatch,
-        svgCode: svgMatch ? svgMatch[1] : undefined
+      const assistantMsg: ChatMessage = {
+        id: Math.random().toString(),
+        sender: 'assistant',
+        text: replyText,
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
       };
 
-      setMessages((prev) => [...prev, pawaMsg]);
-    } catch (error: any) {
-      console.error(error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString() + '-error',
-          sender: 'pawa',
-          text: `Aduh, mohon maaf. Terjadi gangguan koneksi: ${error.message || 'Gagal merespon'}. Silakan coba kirim ulang gagasan Anda.`,
-          timestamp: new Date()
-        }
-      ]);
+      setMessages(prev => [...prev, assistantMsg]);
+    } catch (e: any) {
+      const errorMsg: ChatMessage = {
+        id: Math.random().toString(),
+        sender: 'assistant',
+        text: `Mohon maaf, sistem mengalami kendala koneksi dengan server AI: ${e.message}. Namun secara fiqih, zakat fitrah terhitung 2.5 kg atau 3.5 liter beras atau senilai uang standar BAZNAS setara Rp45.000 per jiwa.`,
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCopy = (id: string, text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
-
-  const handleDownloadTXT = (text: string) => {
-    // Clean codeblock markers for downloader
-    const cleanedText = text.replace(/```[a-z]*\n?/gi, '');
-    const blob = new Blob([cleanedText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `PAWA_Karya_Tulisan_${new Date().toISOString().slice(0,10)}_${Math.floor(100+Math.random()*900)}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadSVG = (svgCode: string) => {
-    const blob = new Blob([svgCode], { type: 'image/svg+xml;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `PAWA_Karya_Vector_Ilustrasi_${new Date().toISOString().slice(0,10)}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  };
-
-  const handlePrint = (text: string) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    const cleanHTML = text
-      .replace(/\n/g, '<br/>')
-      .replace(/```[a-z]*/gi, '<pre class="bg-gray-100 p-4 rounded text-sm my-2">')
-      .replace(/```/g, '</pre>');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>PAWA - Karya Tulisan Kreatif</title>
-          <style>
-            body { font-family: 'Inter', sans-serif; padding: 40px; color: #1e293b; line-height: 1.6; }
-            .header { border-bottom: 2px solid #0f62fe; padding-bottom: 12px; margin-bottom: 24px; }
-            .title { font-size: 24px; font-weight: bold; color: #0f172a; margin-top: 0; }
-            .meta { font-size: 12px; color: #64748b; margin-top: -8px; }
-            .content { font-size: 15px; }
-            .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 12px; font-size: 11px; text-align: center; color: #94a3b8; }
-          </style>
-        </head>
-        <body onload="window.print()">
-          <div class="header">
-            <h1 class="title">Karya Tulisan Kreatif</h1>
-            <p class="meta">Diproduksi secara instan oleh PAWA (Panji Wafa) - ${new Date().toLocaleDateString('id-ID')}</p>
-          </div>
-          <div class="content">
-            ${cleanHTML}
-          </div>
-          <div class="footer">
-            PAWA | Panduan Andal, Karya Sempurna &copy; 2026
-          </div>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputVal.trim()) return;
+    promptAsisten(inputVal);
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-210px)] bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden shadow-sm" id="pawa_asisten_cerdas_container">
-      {/* Thread Window */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex flex-col max-w-[85%] ${
-              msg.sender === 'user' ? 'ml-auto items-end animate-fade-in' : 'mr-auto items-start animate-fade-in'
-            }`}
-          >
-            {/* Sender Label */}
-            <span className="text-xs font-mono text-slate-400 mb-1 flex items-center gap-1">
-              {msg.sender === 'pawa' ? (
-                <>
-                  <Sparkles className="w-3 h-3 text-amber-500 fill-amber-500" /> PAWA Asisten
-                </>
-              ) : (
-                'Anda (Kreator)'
-              )}
-            </span>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-            {/* Bubble */}
-            <div
-              className={`p-4 rounded-2xl leading-relaxed whitespace-pre-wrap text-sm md:text-base border ${
-                msg.sender === 'user'
-                  ? 'bg-blue-600 text-white border-blue-500 rounded-tr-none text-left shadow-sm'
-                  : 'bg-white text-slate-800 border-slate-200 rounded-tl-none shadow-sm'
-              }`}
-            >
-              {msg.text}
+      {/* Sisi Kiri: Petunjuk Singkat Panduan Operasional / Bantuan */}
+      <div className="lg:col-span-1 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+        
+        <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+          <BookOpen className="w-5 h-5 text-emerald-700" />
+          <h3 className="font-display font-semibold text-slate-800 text-lg">Panduan Operasional</h3>
+        </div>
 
-              {/* Renders Interactive SVG Design Output directly in the chat! */}
-              {msg.isSvg && msg.svgCode && (
-                <div className="mt-4 p-4 bg-slate-100 border border-slate-200 rounded-xl flex flex-col items-center">
-                  <div className="text-xs font-mono text-slate-500 mb-2 flex items-center gap-1 border-b pb-1 w-full border-slate-200">
-                    <Eye className="w-3.5 h-3.5 text-blue-600" /> Pratinjau Ilustrasi SVG:
-                  </div>
-                  <div 
-                    className="max-w-full overflow-auto bg-white p-2 rounded-lg shadow-inner max-h-[250px] flex items-center justify-center border border-slate-100"
-                    dangerouslySetInnerHTML={{ __html: msg.svgCode }}
-                  />
-                  <button
-                    id={`btn_dl_svg_${msg.id}`}
-                    onClick={() => handleDownloadSVG(msg.svgCode!)}
-                    className="mt-3 flex items-center gap-1 p-2 bg-amber-500 hover:bg-amber-600 text-white font-medium text-xs rounded-lg transition"
-                  >
-                    <Download className="w-3.5 h-3.5" /> Unduh Karya Vector (.SVG)
-                  </button>
+        <div className="space-y-4 text-xs text-slate-600">
+          
+          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1.5">
+            <span className="font-bold text-emerald-900 block">1. Cara Mencatat Dana Masuk</span>
+            <p className="leading-relaxed">
+              Buka menu <strong>"Penghimpunan"</strong>. Isi nama muzakki/donatur, nomor HP, jumlah nominal, jenis amal (fitrah, mal, infak, sedekah, wakaf) dan klik <strong>"Catat &amp; Ambil Kwitansi"</strong>. Klik tombol <strong>"Cetak"</strong> untuk memunculkan slip PDF resmi.
+            </p>
+          </div>
+
+          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200/60 space-y-1.5">
+            <span className="font-bold text-amber-900 block">2. Cara Verifikasi Mustahik</span>
+            <p className="leading-relaxed">
+              Buka menu <strong>"Mustahik"</strong>. Masukkan identitas dhuafa serta kelompok asnafnya. Tim Sekretaris/Admin dapat mengklik <strong>"Ubah Status Verifikasi"</strong> untuk mengaudit kelayakan dhuafa (Belum Diperiksa &rarr; Layak &rarr; Tidak Layak) dilengkapi pertimbangan tertulis.
+            </p>
+          </div>
+
+          <div className="p-3 bg-blue-50 rounded-xl border border-blue-200/60 space-y-1.5">
+            <span className="font-bold text-blue-900 block">3. Cara Penyaluran &amp; Tanda Tangan</span>
+            <p className="leading-relaxed">
+              Buka menu <strong>"Penyaluran"</strong>. Buat agenda program bantuan. Pipa alur kerja akan mengawal prosesnya. Ketika berstatus <strong>"Penyaluran"</strong>, Anda dapat menekan tombol <strong>"Isi Tanda Terima Digital &amp; Bukti Foto"</strong> untuk menggambar tanda tangan basah di layar secara langsung!
+            </p>
+          </div>
+
+          <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+            <span className="font-bold text-slate-800 block">4. Pengaturan Hak Akses Berjenjang</span>
+            <p className="leading-relaxed">
+              Lembaga amil dilindungi oleh sistem kualifikasi peran. Anda dapat menyimulasikan peran sebagai <strong>Bendahara, Ketua, Sekretaris, Lapangan,</strong> atau <strong>Donatur</strong> menggunakan tombol pemilih peran yang terletak di sudut kanan atas menu utama.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Sisi Kanan: Asisten Interaktif Cerdas PAWA */}
+      <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col h-[580px] justify-between">
+        
+        {/* Header Asisten */}
+        <div className="flex justify-between items-center pb-3 border-b border-slate-100 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-md relative">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              <div className="absolute right-0 bottom-0 w-2 h-2 rounded-full bg-emerald-400 border border-white"></div>
+            </div>
+            <div>
+              <h4 className="font-semibold text-slate-800 text-sm font-display">Asisten Cerdas PAWA</h4>
+              <p className="text-[10px] text-emerald-600 font-bold">Panduan Andal, Karya Sempurna</p>
+            </div>
+          </div>
+          
+          <div className="text-right text-[10px] text-slate-400 font-mono">
+            <span>Model: Gemini 3.5 Flash</span>
+          </div>
+        </div>
+
+        {/* Chat Messages Log Area */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-3 my-2 scrollbar-thin scrollbar-thumb-emerald-100">
+          {messages.map((m) => {
+            const isUser = m.sender === 'user';
+            return (
+              <div 
+                key={m.id} 
+                className={`flex gap-2.5 max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
+              >
+                {/* Bubble Avatar */}
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isUser ? 'bg-emerald-800 text-white' : 'bg-amber-100 text-amber-800'}`}>
+                  {isUser ? 'U' : 'P'}
                 </div>
-              )}
-            </div>
 
-            {/* Message Action Utilities */}
-            <div className="flex gap-2.5 mt-1.5 px-1">
-              <button
-                id={`btn_copy_${msg.id}`}
-                onClick={() => handleCopy(msg.id, msg.text)}
-                className="text-xs font-medium text-slate-400 hover:text-blue-600 flex items-center gap-1 p-1 rounded hover:bg-slate-100 transition-colors"
-                title="Salin tulisan"
-              >
-                {copiedId === msg.id ? (
-                  <>
-                    <Check className="w-3.5 h-3.5 text-green-500" /> Tersalin
-                  </>
-                ) : (
-                  <>
-                    <Copy className="w-3.5 h-3.5" /> Salin
-                  </>
-                )}
-              </button>
-
-              <button
-                id={`btn_txt_${msg.id}`}
-                onClick={() => handleDownloadTXT(msg.text)}
-                className="text-xs font-medium text-slate-400 hover:text-blue-600 flex items-center gap-1 p-1 rounded hover:bg-slate-100 transition-colors"
-                title="Unduh format TXT"
-              >
-                <Download className="w-3.5 h-3.5" /> Unduh TXT
-              </button>
-
-              <button
-                id={`btn_print_${msg.id}`}
-                onClick={() => handlePrint(msg.text)}
-                className="text-xs font-medium text-slate-400 hover:text-blue-600 flex items-center gap-1 p-1 rounded hover:bg-slate-100 transition-colors"
-                title="Cetak atau Unduh PDF"
-              >
-                <Printer className="w-3.5 h-3.5" /> Format PDF / Cetak
-              </button>
-            </div>
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex flex-col mr-auto max-w-[85%] items-start animate-pulse">
-            <span className="text-xs font-mono text-slate-400 mb-1 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-blue-500 animate-spin" /> PAWA merespon...
-            </span>
-            <div className="p-4 rounded-2xl bg-white border border-slate-200 rounded-tl-none shadow-sm flex items-center gap-3">
-              <div className="flex gap-1.5">
-                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                {/* Bubble chat text body */}
+                <div className={`rounded-2xl p-3.5 text-xs leading-relaxed shadow-sm ${isUser ? 'bg-emerald-850 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'}`}>
+                  <p className="whitespace-pre-wrap">{m.text}</p>
+                  <span className={`block text-[8px] mt-1 text-right ${isUser ? 'text-emerald-300' : 'text-slate-400'}`}>
+                    {m.timestamp}
+                  </span>
+                </div>
               </div>
-              <span className="text-sm font-medium text-slate-500">Menyusun karya berkualitas sinematik...</span>
+            );
+          })}
+
+          {loading && (
+            <div className="flex gap-2 mr-auto max-w-[80%] animate-pulse">
+              <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">
+                <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />
+              </div>
+              <div className="rounded-2xl p-3 bg-slate-50 border border-slate-100 text-[10px] text-slate-400 italic">
+                PAWA sedang menghitung &amp; merumuskan nasihat syariah...
+              </div>
             </div>
-          </div>
-        )}
-        <div ref={chatEndRef} />
-      </div>
+          )}
+        </div>
 
-      {/* Suggested Fast Guides */}
-      <div className="bg-slate-100/50 border-t border-slate-200/60 p-3 flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-none">
-        <button
-          id="fast_act_1"
-          onClick={() => handleSend('Tolong tuliskan naskah naskah video pendek YouTube menarik, berdurasi 1 menit membahas kecerdasan buatan, lengkap dengan efek visual dan musik pendukung.')}
-          className="bg-white border border-slate-200 text-xs font-medium text-slate-600 px-3 py-1.5 rounded-full hover:border-blue-400 hover:text-blue-600 transition"
-        >
-          📝 Tulis Naskah YouTube Short
-        </button>
-        <button
-          id="fast_act_2"
-          onClick={() => handleSend('Rangkumlah teks berikut ke dalam 3 poin penting lalu terjemahkan ke Bahasa Inggris formal: \n"PAWA memberikan pelayanan terpadu bagi pembuat konten di era digital. Pengguna bisa mengasah naskah asisten cerdas, mengedit kecerahan video secara instan, serta menghasilkan format audio digital berkualitas CD secara gratis."')}
-          className="bg-white border border-slate-200 text-xs font-medium text-slate-600 px-3 py-1.5 rounded-full hover:border-blue-400 hover:text-blue-600 transition"
-        >
-          🔄 Rangkum & Terjemahkan
-        </button>
-        <button
-          id="fast_act_3"
-          onClick={() => handleSend('Buat ilustrasi desain sederhana berupa bunga teratai geometris berwarna gradasi biru keemasan. Output harus mengandung blok kode SVG utuh.')}
-          className="bg-white border border-slate-200 text-xs font-medium text-slate-600 px-3 py-1.5 rounded-full hover:border-blue-400 hover:text-blue-600 transition"
-        >
-          🎨 Buat Desain Ilustrasi SVG
-        </button>
-        <button
-          id="fast_act_4"
-          onClick={() => handleSend('Buat silabus materi ajar mandiri berdurasi 4 minggu mengenai tips mengarang tulisan naratif fiksi bagi pemula.')}
-          className="bg-white border border-slate-200 text-xs font-medium text-slate-600 px-3 py-1.5 rounded-full hover:border-blue-400 hover:text-blue-600 transition"
-        >
-          📚 Susun Silabus Materi Belajar
-        </button>
-      </div>
+        {/* Quick Click Question suggestions */}
+        <div className="flex flex-wrap gap-1.5 pb-2 border-t border-slate-100 pt-2 flex-shrink-0">
+          <button 
+            type="button"
+            onClick={() => promptAsisten("Bagaimana pembagian hak amil 12.5% sesuai fiqih?")}
+            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] font-semibold text-left cursor-pointer"
+          >
+            📋 Fiqih Batas Amil 12.5%?
+          </button>
+          <button 
+            type="button"
+            onClick={() => promptAsisten("Bagaimana syarat nisab zakat mal emas?")}
+            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] font-semibold text-left cursor-pointer"
+          >
+            💰 Syarat Nisab Emas?
+          </button>
+          <button 
+            type="button"
+            onClick={() => promptAsisten("Buatkan naskah ajakan berzakat fitrah di MDT Al Jihad")}
+            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] font-semibold text-left cursor-pointer"
+          >
+            📢 Naskah Ajakan Zakat?
+          </button>
+        </div>
 
-      {/* Input Tray */}
-      <div className="bg-white border-t border-slate-200 p-3 md:p-4">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="relative flex items-center rounded-xl bg-slate-100 border border-slate-200 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 px-3 py-2 transition"
-        >
-          <input
-            id="chat_input_field"
+        {/* Input Bar */}
+        <form onSubmit={handleSubmit} className="flex gap-2 flex-shrink-0">
+          <input 
             type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ketikkan ide tulisan, silabus naskah, atau ajakan membuat desain SVG..."
-            className="flex-1 bg-transparent border-none outline-none text-sm md:text-base text-slate-800 pr-12 pl-2 placeholder-slate-400"
+            value={inputVal}
+            onChange={(e) => setInputVal(e.target.value)}
+            placeholder="Tanyakan fatwa zakat murtad, nisab, atau cara cetak kuitansi disini..."
+            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
             disabled={loading}
           />
-          <button
-            id="chat_submit_btn"
+          <button 
             type="submit"
-            disabled={!input.trim() || loading}
-            className="absolute right-2 p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-lg transition shadow-sm"
+            className="p-2 bg-emerald-800 hover:bg-emerald-950 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer"
+            disabled={loading || !inputVal.trim()}
           >
             <Send className="w-4 h-4" />
           </button>
         </form>
-        <div className="text-[10px] text-slate-400 text-center mt-1.5 flex items-center justify-center gap-1">
-          <span>PAWA dipersenjatai dengan kecerdasan server Gemini.</span>
-          <span>•</span>
-          <span>Seret tulisan ke clipboard atau ekspor instan kapan pun.</span>
-        </div>
+
       </div>
+
     </div>
   );
 }
