@@ -25,6 +25,7 @@ import Mustahik from './components/Mustahik';
 import Penyaluran from './components/Penyaluran';
 import Laporan from './components/Laporan';
 import AsistenCerdas from './components/AsistenCerdas';
+import ProfilLembaga from './components/ProfilLembaga';
 import { SetoranDana, MustahikProfile, PenyaluranDana, UserRole, UserProfile } from './types';
 
 // INITIAL SEED DATA FOR FIRST VISIT
@@ -434,6 +435,20 @@ export default function App() {
                   <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                 </button>
 
+                <button 
+                  onClick={() => setActiveTab('profil')}
+                  className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
+                    activeTab === 'profil' 
+                      ? 'bg-emerald-800 text-white shadow' 
+                      : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <BadgeInfo className="w-4 h-4 text-amber-500" /> Profil LAZ Jihad
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 opacity-60" />
+                </button>
+
               </div>
             </div>
 
@@ -520,6 +535,10 @@ export default function App() {
             <AsistenCerdas 
               userRole={currentUser.role}
             />
+          )}
+
+          {activeTab === 'profil' && (
+            <ProfilLembaga />
           )}
 
         </main>
