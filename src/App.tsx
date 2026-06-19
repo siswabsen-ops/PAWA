@@ -150,6 +150,14 @@ export default function App() {
     setSetoranList(prev => [...prev, newSetoran]);
   };
 
+  const handleUpdateSetoran = (updatedSetoran: SetoranDana) => {
+    setSetoranList(prev => prev.map(s => s.id === updatedSetoran.id ? updatedSetoran : s));
+  };
+
+  const handleDeleteSetoran = (id: string) => {
+    setSetoranList(prev => prev.filter(s => s.id !== id));
+  };
+
   const handleAddMustahik = (newMustahik: MustahikProfile) => {
     setMustahikList(prev => [...prev, newMustahik]);
   };
@@ -491,6 +499,8 @@ export default function App() {
             <Penghimpunan 
               setoranList={setoranList}
               onAddSetoran={handleAddSetoran}
+              onUpdateSetoran={handleUpdateSetoran}
+              onDeleteSetoran={handleDeleteSetoran}
               userRole={currentUser.role}
             />
           )}

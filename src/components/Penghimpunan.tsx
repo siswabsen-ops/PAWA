@@ -8,20 +8,34 @@ import {
   CheckCircle,
   FileText,
   BadgeAlert,
-  Info
+  Info,
+  Edit2,
+  Trash2,
+  X
 } from 'lucide-react';
 import { SetoranDana, DanaType } from '../types';
 
 interface PenghimpunanProps {
   setoranList: SetoranDana[];
   onAddSetoran: (newSetoran: SetoranDana) => void;
+  onUpdateSetoran: (updatedSetoran: SetoranDana) => void;
+  onDeleteSetoran: (id: string) => void;
   userRole: string; // for access checks
 }
 
-export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: PenghimpunanProps) {
+export default function Penghimpunan({ 
+  setoranList, 
+  onAddSetoran, 
+  onUpdateSetoran, 
+  onDeleteSetoran, 
+  userRole 
+}: PenghimpunanProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('All');
   
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null);
+
   // Form State
   const [muzakkiName, setMuzakkiName] = useState('');
   const [phone, setPhone] = useState('');
@@ -56,13 +70,67 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
     }).format(num);
   };
 
+  const parseIndonesianDateToYmd = (dateStr: string) => {
+    try {
+      const months = {
+        'januari': '01', 'februari': '02', 'maret': '03', 'april': '04', 
+        'mei': '05', 'juni': '06', 'juli': '07', 'agustus': '08', 
+        'september': '09', 'oktober': '10', 'november': '11', 'desember': '12'
+      };
+      const cleaned = dateStr.toLowerCase();
+      const parts = cleaned.split(' ');
+      if (parts.length >= 3) {
+        const day = parts[0].padStart(2, '0');
+        const monthName = parts[1];
+        const year = parts[2];
+        const monthNum = months[monthName as keyof typeof months] || '01';
+        return `${year}-${monthNum}-${day}`;
+      }
+      return dateStr;
+    } catch {
+      const today = new Date();
+      return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    }
+  };
+
+  const handleStartEdit = (item: SetoranDana) => {
+    setEditingId(item.id);
+    setMuzakkiName(item.muzakkiName);
+    setPhone(item.phone);
+    setAlamat(item.alamat);
+    setAmount(item.amount.toString());
+    setType(item.type);
+    setPaymentMethod(item.paymentMethod);
+    setKeterangan(item.keterangan);
+    setInputTanggal(parseIndonesianDateToYmd(item.tanggal));
+    setInputTahun(item.tahun || new Date().getFullYear().toString());
+    setSuccessMsg('');
+    setErrorMsg('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setMuzakkiName('');
+    setPhone('');
+    setAlamat('');
+    setAmount('');
+    setType('Zakat Fitrah');
+    setPaymentMethod('Tunai');
+    setKeterangan('');
+    const today = new Date();
+    setInputTanggal(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+    setInputTahun(today.getFullYear().toString());
+    setSuccessMsg('');
+    setErrorMsg('');
+  };
+
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     setSuccessMsg('');
 
     if (!isAllowedToInput) {
-      setErrorMsg('Hak Akses Terbatas. Hanya Admin, Bendahara, Sekretaris, dan Ketua yang dapat mencatat setoran.');
+      setErrorMsg('Hak Akses Terbatas. Hanya Admin, Bendahara, Sekretaris, dan Ketua yang dapat mencatat atau mengedit setoran.');
       return;
     }
 
@@ -77,20 +145,6 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
       return;
     }
 
-    // Generate unique slip code using selected date
-    const dateObj = new Date(inputTanggal);
-    const prefixMap: Record<DanaType, string> = {
-      'Zakat Fitrah': 'ZF',
-      'Zakat Mal': 'ZM',
-      'Infak': 'IF',
-      'Sedekah': 'SD',
-      'Wakaf': 'WK'
-    };
-    const prefix = prefixMap[type];
-    const timestampSeed = dateObj.getTime().toString().slice(-4) || '99';
-    const dateFormatted = `${dateObj.getFullYear() || new Date().getFullYear()}${(dateObj.getMonth()+1 || 1).toString().padStart(2, '0')}${(dateObj.getDate() || 1).toString().padStart(2, '0')}`;
-    const noKwitansi = `LAZ-${prefix}-${dateFormatted}-${timestampSeed}`;
-
     // Format tanggal as Indonesian text
     const formatIndonesianDate = (dateStr: string) => {
       try {
@@ -102,32 +156,71 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
       }
     };
 
-    const newSetoran: SetoranDana = {
-      id: Math.random().toString(36).substring(2, 9),
-      muzakkiName,
-      phone,
-      alamat,
-      amount: parseAmount,
-      type,
-      paymentMethod,
-      tanggal: formatIndonesianDate(inputTanggal),
-      tahun: inputTahun,
-      keterangan: keterangan || `Setoran ${type} an. ${muzakkiName}`,
-      noKwitansi
-    };
+    if (editingId) {
+      const originalSetoran = setoranList.find(s => s.id === editingId);
+      if (!originalSetoran) {
+        setErrorMsg('Data setoran asli tidak ditemukan.');
+        return;
+      }
 
-    onAddSetoran(newSetoran);
-    setSuccessMsg(`Setoran an. ${muzakkiName} berhasil dicatat.`);
-    
-    // Auto show receipt
-    setActiveReceipt(newSetoran);
+      const updatedSetoran: SetoranDana = {
+        ...originalSetoran,
+        muzakkiName,
+        phone,
+        alamat,
+        amount: parseAmount,
+        type,
+        paymentMethod,
+        tanggal: inputTanggal.includes('-') && inputTanggal.split('-').length === 3 ? formatIndonesianDate(inputTanggal) : inputTanggal,
+        tahun: inputTahun,
+        keterangan: keterangan || `Setoran ${type} an. ${muzakkiName}`
+      };
 
-    // Reset Form (maintain current date/year for convenience of multiple entry, clear name and details)
-    setMuzakkiName('');
-    setPhone('');
-    setAlamat('');
-    setAmount('');
-    setKeterangan('');
+      onUpdateSetoran(updatedSetoran);
+      setSuccessMsg(`Data setoran dengan Kwitansi #${originalSetoran.noKwitansi} berhasil direvisi.`);
+      handleCancelEdit();
+    } else {
+      // Generate unique slip code using selected date
+      const dateObj = new Date(inputTanggal);
+      const prefixMap: Record<DanaType, string> = {
+        'Zakat Fitrah': 'ZF',
+        'Zakat Mal': 'ZM',
+        'Infak': 'IF',
+        'Sedekah': 'SD',
+        'Wakaf': 'WK'
+      };
+      const prefix = prefixMap[type];
+      const timestampSeed = dateObj.getTime().toString().slice(-4) || '99';
+      const dateFormatted = `${dateObj.getFullYear() || new Date().getFullYear()}${(dateObj.getMonth()+1 || 1).toString().padStart(2, '0')}${(dateObj.getDate() || 1).toString().padStart(2, '0')}`;
+      const noKwitansi = `LAZ-${prefix}-${dateFormatted}-${timestampSeed}`;
+
+      const newSetoran: SetoranDana = {
+        id: Math.random().toString(36).substring(2, 9),
+        muzakkiName,
+        phone,
+        alamat,
+        amount: parseAmount,
+        type,
+        paymentMethod,
+        tanggal: formatIndonesianDate(inputTanggal),
+        tahun: inputTahun,
+        keterangan: keterangan || `Setoran ${type} an. ${muzakkiName}`,
+        noKwitansi
+      };
+
+      onAddSetoran(newSetoran);
+      setSuccessMsg(`Setoran an. ${muzakkiName} berhasil dicatat.`);
+      
+      // Auto show receipt
+      setActiveReceipt(newSetoran);
+
+      // Reset Form (maintain current date/year for convenience of multiple entry, clear name and details)
+      setMuzakkiName('');
+      setPhone('');
+      setAlamat('');
+      setAmount('');
+      setKeterangan('');
+    }
   };
 
   // Filter & Search
@@ -178,9 +271,18 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
         
         {/* Formulir Pencatatan Dana Masuk */}
         <div className="lg:col-span-1 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <PlusCircle className="w-5 h-5 text-emerald-600" />
-            <h3 className="font-display font-semibold text-slate-800 text-lg">Input Penerimaan Kas</h3>
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center gap-2">
+              <PlusCircle className="w-5 h-5 text-emerald-600" />
+              <h3 className="font-display font-semibold text-slate-800 text-lg">
+                {editingId ? 'Revisi Penerimaan Kas' : 'Input Penerimaan Kas'}
+              </h3>
+            </div>
+            {editingId && (
+              <span className="text-[9px] bg-amber-500 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Mode Edit
+              </span>
+            )}
           </div>
 
           {!isAllowedToInput ? (
@@ -313,12 +415,27 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                 <div className="text-[11px] text-emerald-800 font-semibold bg-emerald-50 p-2 rounded border border-emerald-200">{successMsg}</div>
               )}
 
-              <button 
-                type="submit" 
-                className="w-full py-2.5 bg-gradient-to-r from-emerald-700 to-emerald-900 text-white rounded-lg font-bold text-xs hover:from-emerald-800 hover:to-emerald-950 transition-colors shadow-md border border-amber-500/20 flex justify-center items-center gap-1.5 cursor-pointer"
-              >
-                <CheckCircle className="w-4 h-4" /> Catat & Ambil Kwitansi
-              </button>
+              <div className="space-y-2">
+                <button 
+                  type="submit" 
+                  className={`w-full py-2.5 text-white rounded-lg font-bold text-xs transition-colors shadow-md flex justify-center items-center gap-1.5 cursor-pointer ${
+                    editingId 
+                      ? 'bg-amber-600 hover:bg-amber-700 border border-amber-600/30' 
+                      : 'bg-gradient-to-r from-emerald-700 to-emerald-900 hover:from-emerald-800 hover:to-emerald-950 border border-amber-500/20'
+                  }`}
+                >
+                  <CheckCircle className="w-4 h-4" /> {editingId ? 'Simpan Perubahan (Ubah)' : 'Catat & Ambil Kwitansi'}
+                </button>
+                {editingId && (
+                  <button 
+                    type="button" 
+                    onClick={handleCancelEdit}
+                    className="w-full py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 rounded-lg font-bold text-xs transition-all flex justify-center items-center gap-1.5 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" /> Batal Revisi (Batal)
+                  </button>
+                )}
+              </div>
 
               <div className="pt-2 text-center">
                 <button 
@@ -475,12 +592,46 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                         )}
                       </td>
                       <td className="p-3 text-center">
-                        <button 
-                          onClick={() => setActiveReceipt(item)}
-                          className="px-2.5 py-1 text-[11px] font-bold border border-slate-200 hover:border-emerald-500 hover:text-emerald-700 rounded-md transition-all text-slate-600 bg-white inline-flex items-center gap-1 text-center"
-                        >
-                          <FileText className="w-3 h-3" /> Cetak
-                        </button>
+                        <div className="flex items-center justify-center gap-1.5">
+                          <button 
+                            onClick={() => setActiveReceipt(item)}
+                            title="Cetak Kwitansi"
+                            className="px-2.5 py-1 text-[11px] font-bold border border-slate-200 hover:border-emerald-700 hover:text-emerald-900 rounded-lg transition-all text-slate-600 bg-white inline-flex items-center gap-1 text-center cursor-pointer"
+                          >
+                            <FileText className="w-3 h-3" /> Cetak
+                          </button>
+                          
+                          {isAllowedToInput && (
+                            <>
+                              <button 
+                                onClick={() => handleStartEdit(item)}
+                                title="Revisi / Edit Data"
+                                className={`px-2 py-1 text-[11px] font-bold border rounded-lg transition-all inline-flex items-center gap-1 text-center cursor-pointer ${
+                                  editingId === item.id 
+                                    ? 'border-amber-500 bg-amber-50 text-amber-800' 
+                                    : 'border-slate-200 hover:border-amber-500 hover:text-amber-700 text-slate-600 bg-white'
+                                }`}
+                              >
+                                <Edit2 className="w-3 h-3" /> Revisi
+                              </button>
+                              
+                              <button 
+                                onClick={() => {
+                                  if (confirm(`Apakah Anda yakin ingin menghapus data setoran Muzakki ${item.muzakkiName} (#${item.noKwitansi})?`)) {
+                                    onDeleteSetoran(item.id);
+                                    if (editingId === item.id) {
+                                      handleCancelEdit();
+                                    }
+                                  }
+                                }}
+                                title="Hapus Data"
+                                className="px-2 py-1 text-[11px] font-bold border border-slate-200 hover:border-rose-500 hover:text-rose-700 rounded-lg transition-all text-slate-600 bg-white inline-flex items-center gap-1 text-center cursor-pointer"
+                              >
+                                <Trash2 className="w-3 h-3 text-rose-500" /> Hapus
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))
