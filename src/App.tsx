@@ -118,31 +118,31 @@ export default function App() {
 
   // State Keuangan & Data Utama
   const [setoranList, setSetoranList] = useState<SetoranDana[]>(() => {
-    const local = localStorage.getItem('laz_aljihad_setoran');
+    const local = localStorage.getItem('laz_aljihad_setoran_v2');
     return local ? JSON.parse(local) : INITIAL_SETORAN;
   });
 
   const [mustahikList, setMustahikList] = useState<MustahikProfile[]>(() => {
-    const local = localStorage.getItem('laz_aljihad_mustahik');
+    const local = localStorage.getItem('laz_aljihad_mustahik_v2');
     return local ? JSON.parse(local) : INITIAL_MUSTAHIK;
   });
 
   const [penyaluranList, setPenyaluranList] = useState<PenyaluranDana[]>(() => {
-    const local = localStorage.getItem('laz_aljihad_penyaluran');
+    const local = localStorage.getItem('laz_aljihad_penyaluran_v2');
     return local ? JSON.parse(local) : INITIAL_PENYALURAN;
   });
 
   // Sync state to local storage for extreme persistence!
   useEffect(() => {
-    localStorage.setItem('laz_aljihad_setoran', JSON.stringify(setoranList));
+    localStorage.setItem('laz_aljihad_setoran_v2', JSON.stringify(setoranList));
   }, [setoranList]);
 
   useEffect(() => {
-    localStorage.setItem('laz_aljihad_mustahik', JSON.stringify(mustahikList));
+    localStorage.setItem('laz_aljihad_mustahik_v2', JSON.stringify(mustahikList));
   }, [mustahikList]);
 
   useEffect(() => {
-    localStorage.setItem('laz_aljihad_penyaluran', JSON.stringify(penyaluranList));
+    localStorage.setItem('laz_aljihad_penyaluran_v2', JSON.stringify(penyaluranList));
   }, [penyaluranList]);
 
   // Actions handlers
@@ -188,6 +188,9 @@ export default function App() {
     localStorage.removeItem('laz_aljihad_setoran');
     localStorage.removeItem('laz_aljihad_mustahik');
     localStorage.removeItem('laz_aljihad_penyaluran');
+    localStorage.removeItem('laz_aljihad_setoran_v2');
+    localStorage.removeItem('laz_aljihad_mustahik_v2');
+    localStorage.removeItem('laz_aljihad_penyaluran_v2');
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
