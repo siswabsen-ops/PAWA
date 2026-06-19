@@ -59,8 +59,8 @@ export default function Penghimpunan({
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Check roles: Bendahara, Admin/Pengurus Yayasan, Ketua LAZ have entry options + Donatur (testing/umum)
-  const isAllowedToInput = userRole === 'admin_yayasan' || userRole === 'bendahara' || userRole === 'ketua_laz' || userRole === 'sekretaris' || userRole === 'donatur';
+  // Check roles: Bendahara, Admin/Pengurus Yayasan, Ketua LAZ have entry options
+  const isAllowedToInput = userRole === 'admin_yayasan' || userRole === 'bendahara' || userRole === 'ketua_laz' || userRole === 'sekretaris';
 
   const formatRupiah = (num: number) => {
     return new Intl.NumberFormat('id-ID', {
