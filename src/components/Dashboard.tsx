@@ -433,12 +433,6 @@ export default function Dashboard({
                 <h3 className="font-display font-semibold text-slate-900">Setoran Penghimpunan Terbaru</h3>
                 <p className="text-xs text-slate-400">Arus masuk dana dari para Muzakki & Munfiq dan amalan kebajikan</p>
               </div>
-              <button 
-                onClick={() => onNavigate('penghimpunan')}
-                className="text-xs text-emerald-800 font-bold hover:underline"
-              >
-                Kelola Setoran &rarr;
-              </button>
             </div>
 
             <div className="overflow-x-auto">
