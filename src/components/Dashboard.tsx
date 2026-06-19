@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { 
   TrendingUp, 
   Users, 
@@ -91,8 +92,29 @@ export default function Dashboard({
             <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 border border-amber-400/30 rounded-full text-amber-300 text-xs font-semibold uppercase tracking-wider">
               ✨ DI BAWAH NAUNGAN YAYASAN AL HAMID HADUM
             </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold font-display tracking-tight">
-              LAZ MDT Al Jihad
+            <h1 className="text-3xl md:text-4xl font-extrabold font-display tracking-tight flex flex-wrap gap-x-2.5 items-center">
+              {"LAZ MDT Al Jihad".split(" ").map((word, idx) => (
+                <motion.span
+                  key={idx}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ 
+                    opacity: 1, 
+                    y: [0, -3, 0], 
+                  }}
+                  transition={{
+                    opacity: { duration: 0.6, delay: idx * 0.12 },
+                    y: {
+                      repeat: Infinity,
+                      repeatType: "reverse",
+                      duration: 2.5 + idx * 0.4,
+                      ease: "easeInOut",
+                    }
+                  }}
+                  className="inline-block font-black select-none drop-shadow-[0_4px_12px_rgba(245,158,11,0.25)] bg-gradient-to-r from-amber-300 via-white to-amber-200 bg-clip-text text-transparent cursor-default hover:scale-105 hover:brightness-110 transition-all duration-300"
+                >
+                  {word}
+                </motion.span>
+              ))}
             </h1>
             <p className="text-emerald-100 max-w-xl text-sm leading-relaxed">
               Sistem Manajemen Terpadu pendaftaran Muzakki, verifikasi profil 8 Golongan Asnaf Mustahik, akuntansi keuangan, hingga pengawasan penyaluran dana zakat secara syari, amanah, dan transparan.

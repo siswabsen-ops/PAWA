@@ -29,6 +29,7 @@ import Penyaluran from './components/Penyaluran';
 import Laporan from './components/Laporan';
 import AsistenCerdas from './components/AsistenCerdas';
 import ProfilLembaga from './components/ProfilLembaga';
+import MascotAlJihad from './components/MascotAlJihad';
 import { SetoranDana, MustahikProfile, PenyaluranDana, UserRole, UserProfile } from './types';
 
 // INITIAL SEED DATA FOR FIRST VISIT (Starts completely empty as requested so no non-inputted data is present)
@@ -677,36 +678,41 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="border-t border-slate-100 pt-3 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowPinGuide(!showPinGuide)}
-                  className="w-full text-center text-[10px] text-emerald-800 font-bold hover:underline cursor-pointer flex items-center justify-center gap-1"
-                >
-                  {showPinGuide ? '▲ Sembunyikan' : '▼ Lihat'} Daftar Kode Akses Berdasarkan Peran
-                </button>
-                
-                {showPinGuide && (
-                  <div className="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-200/60 space-y-1.5 text-[10px] text-slate-600 font-mono">
-                    <span className="font-extrabold text-slate-500 uppercase tracking-widest block mb-1">Kode Akses Aktif:</span>
-                    {(Object.entries(roleCodes) as [string,  any][]).map(([pinCode, userDetails]) => (
-                      <div key={pinCode} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-0">
-                        <span className="font-sans font-semibold text-slate-700">{userDetails.label}:</span>
-                        <span className="font-bold text-emerald-800 tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-100">{pinCode}</span>
-                      </div>
-                    ))}
-                    <span className="text-[9px] text-amber-700 font-sans font-bold block mt-2 text-center leading-normal">
-                      💡 Pengurus yang masuk dapat mengganti Kode Akses ini kapan saja di tab "Profil".
-                    </span>
-                  </div>
-                )}
-              </div>
+              {currentUser.role !== 'donatur' && (
+                <div className="border-t border-slate-100 pt-3 mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowPinGuide(!showPinGuide)}
+                    className="w-full text-center text-[10px] text-emerald-800 font-bold hover:underline cursor-pointer flex items-center justify-center gap-1"
+                  >
+                    {showPinGuide ? '▲ Sembunyikan' : '▼ Lihat'} Daftar Kode Akses Berdasarkan Peran
+                  </button>
+                  
+                  {showPinGuide && (
+                    <div className="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-200/60 space-y-1.5 text-[10px] text-slate-600 font-mono">
+                      <span className="font-extrabold text-slate-500 uppercase tracking-widest block mb-1">Kode Akses Aktif:</span>
+                      {(Object.entries(roleCodes) as [string,  any][]).map(([pinCode, userDetails]) => (
+                        <div key={pinCode} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-0">
+                          <span className="font-sans font-semibold text-slate-700">{userDetails.label}:</span>
+                          <span className="font-bold text-emerald-800 tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-100">{pinCode}</span>
+                        </div>
+                      ))}
+                      <span className="text-[9px] text-amber-700 font-sans font-bold block mt-2 text-center leading-normal">
+                        💡 Pengurus yang masuk dapat mengganti Kode Akses ini kapan saja di tab "Profil".
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
 
             </form>
 
           </div>
         </div>
       )}
+
+      {/* Animated interactive Mascot Companion for Al-Jihad */}
+      <MascotAlJihad onNavigateTab={setActiveTab} />
 
     </div>
   );

@@ -35,6 +35,7 @@ export default function Penghimpunan({
   
   // Edit State
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteConfirmItem, setDeleteConfirmItem] = useState<SetoranDana | null>(null);
 
   // Form State
   const [muzakkiName, setMuzakkiName] = useState('');
@@ -617,12 +618,7 @@ export default function Penghimpunan({
                               
                               <button 
                                 onClick={() => {
-                                  if (confirm(`Apakah Anda yakin ingin menghapus data setoran Muzakki ${item.muzakkiName} (#${item.noKwitansi})?`)) {
-                                    onDeleteSetoran(item.id);
-                                    if (editingId === item.id) {
-                                      handleCancelEdit();
-                                    }
-                                  }
+                                  setDeleteConfirmItem(item);
                                 }}
                                 title="Hapus Data"
                                 className="px-2 py-1 text-[11px] font-bold border border-slate-200 hover:border-rose-500 hover:text-rose-700 rounded-lg transition-all text-slate-600 bg-white inline-flex items-center gap-1 text-center cursor-pointer"
@@ -765,6 +761,57 @@ export default function Penghimpunan({
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi Hapus Data */}
+      {deleteConfirmItem && (
+        <div className="bg-slate-900/60 backdrop-blur-xs fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-sm w-full p-5 shadow-xl border border-slate-100 space-y-4">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="bg-rose-50 p-2.5 rounded-full">
+                <Trash2 className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-slate-900 font-display">Konfirmasi Hapus Data</h4>
+                <p className="text-xs text-slate-500 font-sans">Tindakan ini tidak dapat dibatalkan</p>
+              </div>
+            </div>
+            
+            <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-1">
+              <div className="text-[10px] font-mono text-slate-400">NO. KWITANSI: {deleteConfirmItem.noKwitansi}</div>
+              <div className="text-xs font-semibold text-slate-800">Muzakki: {deleteConfirmItem.muzakkiName}</div>
+              <div className="text-xs text-slate-600">
+                Jumlah: <strong className="text-emerald-700">{formatRupiah(deleteConfirmItem.amount)}</strong>
+              </div>
+              <div className="text-xs text-slate-500 font-light truncate">Keterangan: {deleteConfirmItem.keterangan || '-'}</div>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed font-sans">
+              Apakah Anda yakin ingin menghapus data penerimaan kas / setoran ini dari pembukuan keuangan masuk?
+            </p>
+
+            <div className="flex justify-end gap-2 text-xs pt-1">
+              <button
+                onClick={() => setDeleteConfirmItem(null)}
+                className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  onDeleteSetoran(deleteConfirmItem.id);
+                  if (editingId === deleteConfirmItem.id) {
+                    handleCancelEdit();
+                  }
+                  setDeleteConfirmItem(null);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold transition cursor-pointer"
+              >
+                Ya, Hapus
+              </button>
+            </div>
           </div>
         </div>
       )}
