@@ -29,6 +29,7 @@ export interface SetoranDana {
   type: DanaType;
   paymentMethod: 'Tunai' | 'Transfer Bank' | 'QRIS' | 'Lainnya';
   tanggal: string;
+  tahun?: string;
   keterangan: string;
   noKwitansi: string;
 }

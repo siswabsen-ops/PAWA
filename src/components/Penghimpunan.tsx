@@ -30,6 +30,14 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
   const [type, setType] = useState<DanaType>('Zakat Fitrah');
   const [paymentMethod, setPaymentMethod] = useState<'Tunai' | 'Transfer Bank' | 'QRIS' | 'Lainnya'>('Tunai');
   const [keterangan, setKeterangan] = useState('');
+  const [inputTanggal, setInputTanggal] = useState(() => {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    return `${yyyy}-${mm}-${dd}`;
+  });
+  const [inputTahun, setInputTahun] = useState(() => new Date().getFullYear().toString());
   const [showQR, setShowQR] = useState(false);
   const [activeReceipt, setActiveReceipt] = useState<SetoranDana | null>(null);
 
@@ -69,8 +77,8 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
       return;
     }
 
-    // Generate unique slip code
-    const dateObj = new Date();
+    // Generate unique slip code using selected date
+    const dateObj = new Date(inputTanggal);
     const prefixMap: Record<DanaType, string> = {
       'Zakat Fitrah': 'ZF',
       'Zakat Mal': 'ZM',
@@ -79,9 +87,20 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
       'Wakaf': 'WK'
     };
     const prefix = prefixMap[type];
-    const timestampSeed = dateObj.getTime().toString().slice(-4);
-    const dateFormatted = `${dateObj.getFullYear()}${(dateObj.getMonth()+1).toString().padStart(2, '0')}${dateObj.getDate().toString().padStart(2, '0')}`;
+    const timestampSeed = dateObj.getTime().toString().slice(-4) || '99';
+    const dateFormatted = `${dateObj.getFullYear() || new Date().getFullYear()}${(dateObj.getMonth()+1 || 1).toString().padStart(2, '0')}${(dateObj.getDate() || 1).toString().padStart(2, '0')}`;
     const noKwitansi = `LAZ-${prefix}-${dateFormatted}-${timestampSeed}`;
+
+    // Format tanggal as Indonesian text
+    const formatIndonesianDate = (dateStr: string) => {
+      try {
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        return d.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+      } catch (err) {
+        return dateStr;
+      }
+    };
 
     const newSetoran: SetoranDana = {
       id: Math.random().toString(36).substring(2, 9),
@@ -91,7 +110,8 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
       amount: parseAmount,
       type,
       paymentMethod,
-      tanggal: dateObj.toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }),
+      tanggal: formatIndonesianDate(inputTanggal),
+      tahun: inputTahun,
       keterangan: keterangan || `Setoran ${type} an. ${muzakkiName}`,
       noKwitansi
     };
@@ -102,7 +122,7 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
     // Auto show receipt
     setActiveReceipt(newSetoran);
 
-    // Reset Form
+    // Reset Form (maintain current date/year for convenience of multiple entry, clear name and details)
     setMuzakkiName('');
     setPhone('');
     setAlamat('');
@@ -259,6 +279,30 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                   onChange={(e) => setKeterangan(e.target.value)}
                   className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none"
                 />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Tanggal Penerimaan *</label>
+                  <input 
+                    type="date"
+                    value={inputTanggal}
+                    onChange={(e) => setInputTanggal(e.target.value)}
+                    className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none text-slate-800 font-medium"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-600 block mb-1">Tahun Keuangan *</label>
+                  <input 
+                    type="text"
+                    placeholder="Contoh: 2026 atau 1447 H"
+                    value={inputTahun}
+                    onChange={(e) => setInputTahun(e.target.value)}
+                    className="w-full text-xs border border-slate-200 rounded-lg px-2.5 py-2 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 outline-none text-slate-800 font-medium"
+                    required
+                  />
+                </div>
               </div>
 
               {errorMsg && (
@@ -422,7 +466,14 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                         </span>
                       </td>
                       <td className="p-3 text-right font-black text-slate-950 text-[11px]">{formatRupiah(item.amount)}</td>
-                      <td className="p-3 text-slate-500 whitespace-nowrap">{item.tanggal}</td>
+                      <td className="p-3 text-slate-500 whitespace-nowrap">
+                        <div>{item.tanggal}</div>
+                        {item.tahun && (
+                          <div className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100/50 inline-block mt-0.5">
+                            Th. {item.tahun}
+                          </div>
+                        )}
+                      </td>
                       <td className="p-3 text-center">
                         <button 
                           onClick={() => setActiveReceipt(item)}
@@ -467,7 +518,9 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                 <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 p-1 px-2.5 rounded border border-emerald-100">
                   {activeReceipt.noKwitansi}
                 </span>
-                <span className="text-[10px] text-slate-400 block mt-2">Dibuat: {activeReceipt.tanggal}</span>
+                <span className="text-[10px] text-slate-400 block mt-2">
+                  Dibuat: {activeReceipt.tanggal} {activeReceipt.tahun && `(Tahun Keuangan: ${activeReceipt.tahun})`}
+                </span>
               </div>
             </div>
 
