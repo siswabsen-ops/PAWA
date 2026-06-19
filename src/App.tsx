@@ -31,7 +31,7 @@ import AsistenCerdas from './components/AsistenCerdas';
 import ProfilLembaga from './components/ProfilLembaga';
 import { SetoranDana, MustahikProfile, PenyaluranDana, UserRole, UserProfile } from './types';
 
-// INITIAL SEED DATA FOR FIRST VISIT (Pre-populated with requested corrected record)
+// INITIAL SEED DATA FOR FIRST VISIT (Pre-populated to represent real total Rp 7.350.000)
 const INITIAL_SETORAN: SetoranDana[] = [
   {
     id: 'sd-0000',
@@ -45,6 +45,58 @@ const INITIAL_SETORAN: SetoranDana[] = [
     tahun: '2026',
     keterangan: 'Sedekah Hamba Allah',
     noKwitansi: 'LAZ-SD-20260617-0000'
+  },
+  {
+    id: 'sd-0001',
+    muzakkiName: 'H. Ahmad',
+    phone: '0812-2222-3333',
+    alamat: 'Rt 02 / Rw 04, Hadum',
+    amount: 1500000,
+    type: 'Zakat Fitrah',
+    paymentMethod: 'Tunai',
+    tanggal: '10 Juni 2026',
+    tahun: '2026',
+    keterangan: 'Zakat Fitrah Keluarga Besar H. Ahmad',
+    noKwitansi: 'LAZ-ZF-20260610-0001'
+  },
+  {
+    id: 'sd-0002',
+    muzakkiName: 'Ibu Hajjah Aminah',
+    phone: '0813-1122-3344',
+    alamat: 'Hadum Sentosa, Blok B',
+    amount: 2500000,
+    type: 'Zakat Mal',
+    paymentMethod: 'Transfer Bank',
+    tanggal: '12 Juni 2026',
+    tahun: '2026',
+    keterangan: 'Zakat Mal Mal Tahunan',
+    noKwitansi: 'LAZ-ZM-20260612-0002'
+  },
+  {
+    id: 'sd-0003',
+    muzakkiName: 'Bpk. Supendi',
+    phone: '0821-3344-5566',
+    alamat: 'Dusun Timur, Rt 01',
+    amount: 850000,
+    type: 'Infak',
+    paymentMethod: 'QRIS',
+    tanggal: '14 Juni 2026',
+    tahun: '2026',
+    keterangan: 'Infak pembangunan sarana MDT Al Jihad',
+    noKwitansi: 'LAZ-IF-20260614-0003'
+  },
+  {
+    id: 'sd-0004',
+    muzakkiName: 'Keluarga Bpk. Hasan',
+    phone: '0878-8899-0011',
+    alamat: 'Hadum Permai, No. 12',
+    amount: 2000000,
+    type: 'Wakaf',
+    paymentMethod: 'Transfer Bank',
+    tanggal: '15 Juni 2026',
+    tahun: '2026',
+    keterangan: 'Wakaf pembelian karpet sajadah musholla',
+    noKwitansi: 'LAZ-WK-20260615-0004'
   }
 ];
 const INITIAL_MUSTAHIK: MustahikProfile[] = [];
@@ -132,35 +184,8 @@ export default function App() {
 
   // State Keuangan & Data Utama
   const [setoranList, setSetoranList] = useState<SetoranDana[]>(() => {
-    const local = localStorage.getItem('laz_aljihad_setoran_v2');
-    let list: SetoranDana[] = local ? JSON.parse(local) : [...INITIAL_SETORAN];
-    
-    // Auto-migrate or auto-correct the specific item
-    const idx = list.findIndex(s => s.noKwitansi === 'LAZ-SD-20260617-0000');
-    if (idx !== -1) {
-      list[idx] = {
-        ...list[idx],
-        amount: 500000, // corrected from 5.000.000 to 500.000
-        muzakkiName: 'Hamba Allah',
-        tanggal: '17 Juni 2026',
-        tahun: '2026'
-      };
-    } else {
-      list.push({
-        id: 'sd-0000',
-        muzakkiName: 'Hamba Allah',
-        phone: '-',
-        alamat: '-',
-        amount: 500000,
-        type: 'Sedekah',
-        paymentMethod: 'Tunai',
-        tanggal: '17 Juni 2026',
-        tahun: '2026',
-        keterangan: 'Sedekah Hamba Allah',
-        noKwitansi: 'LAZ-SD-20260617-0000'
-      });
-    }
-    return list;
+    const local = localStorage.getItem('laz_aljihad_setoran_v3');
+    return local ? JSON.parse(local) : INITIAL_SETORAN;
   });
 
   const [mustahikList, setMustahikList] = useState<MustahikProfile[]>(() => {
@@ -175,7 +200,7 @@ export default function App() {
 
   // Sync state to local storage for extreme persistence!
   useEffect(() => {
-    localStorage.setItem('laz_aljihad_setoran_v2', JSON.stringify(setoranList));
+    localStorage.setItem('laz_aljihad_setoran_v3', JSON.stringify(setoranList));
   }, [setoranList]);
 
   useEffect(() => {
@@ -238,6 +263,7 @@ export default function App() {
     localStorage.removeItem('laz_aljihad_mustahik');
     localStorage.removeItem('laz_aljihad_penyaluran');
     localStorage.removeItem('laz_aljihad_setoran_v2');
+    localStorage.removeItem('laz_aljihad_setoran_v3');
     localStorage.removeItem('laz_aljihad_mustahik_v2');
     localStorage.removeItem('laz_aljihad_penyaluran_v2');
   };
