@@ -1,0 +1,96 @@
+{
+  "entities": {
+    "SetoranDana": {
+      "title": "Setoran Dana",
+      "description": "Informasi dana masuk/penghimpunan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "muzakkiName": { "type": "string" },
+        "phone": { "type": "string" },
+        "alamat": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["Zakat Fitrah", "Zakat Mal", "Infak", "Sedekah", "Wakaf"] },
+        "paymentMethod": { "type": "string", "enum": ["Tunai", "Transfer Bank", "QRIS", "Lainnya"] },
+        "tanggal": { "type": "string" },
+        "tahun": { "type": "string" },
+        "keterangan": { "type": "string" },
+        "noKwitansi": { "type": "string" }
+      },
+      "required": ["id", "muzakkiName", "amount", "type", "paymentMethod", "tanggal", "noKwitansi"]
+    },
+    "MustahikProfile": {
+      "title": "Profil Mustahik",
+      "description": "Data calon/penerima manfaat amil",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nama": { "type": "string" },
+        "identitasNo": { "type": "string" },
+        "phone": { "type": "string" },
+        "alamat": { "type": "string" },
+        "asnaf": { "type": "string" },
+        "penghasilan": { "type": "number" },
+        "tanggungan": { "type": "number" },
+        "kondisiRumah": { "type": "string" },
+        "statusVerifikasi": { "type": "string", "enum": ["Belum Diperiksa", "Layak", "Tidak Layak"] },
+        "catatanVerifikasi": { "type": "string" },
+        "tanggalVerifikasi": { "type": "string" },
+        "riwayatBantuanIds": { "type": "array" }
+      },
+      "required": ["id", "nama", "asnaf", "statusVerifikasi"]
+    },
+    "PenyaluranDana": {
+      "title": "Penyaluran Dana",
+      "description": "Pengeluaran dana atau penyaluran kepada mustahik/kegiatan",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "noPenyaluran": { "type": "string" },
+        "peruntukanName": { "type": "string" },
+        "mustahikId": { "type": "string" },
+        "mustahikNama": { "type": "string" },
+        "asnafTarget": { "type": "string" },
+        "danaSourceType": { "type": "string" },
+        "amountRequested": { "type": "number" },
+        "amountApproved": { "type": "number" },
+        "status": { "type": "string", "enum": ["Usulan", "Verifikasi", "Persetujuan", "Penyaluran", "Dokumentasi"] },
+        "tanggalUsulan": { "type": "string" },
+        "tanggalPenyaluran": { "type": "string" },
+        "diusulkanOleh": { "type": "string" },
+        "disetujuiOleh": { "type": "string" },
+        "keterangan": { "type": "string" },
+        "buktiFotoUrl": { "type": "string" },
+        "tandaTerimaDigital": { "type": "string" }
+      },
+      "required": ["id", "noPenyaluran", "peruntukanName", "asnafTarget", "danaSourceType", "amountRequested", "status", "tanggalUsulan", "diusulkanOleh"]
+    },
+    "SecurityConfig": {
+      "title": "Security Configuration",
+      "description": "Konfigurasi pin keamanan untuk role pengurus",
+      "type": "object",
+      "properties": {
+        "roleCodes": { "type": "object" }
+      },
+      "required": ["roleCodes"]
+    }
+  },
+  "firestore": {
+    "/setoran/{id}": {
+      "schema": "SetoranDana",
+      "description": "Koleksi setoran dana amil"
+    },
+    "/mustahik/{id}": {
+      "schema": "MustahikProfile",
+      "description": "Koleksi pendaftaran mustahik amil"
+    },
+    "/penyaluran/{id}": {
+      "schema": "PenyaluranDana",
+      "description": "Koleksi usulan dan realisasi bantuan dana amil"
+    },
+    "/config/security": {
+      "schema": "SecurityConfig",
+      "description": "Dokumen pin pengaman bagi pengurus"
+    }
+  }
+}

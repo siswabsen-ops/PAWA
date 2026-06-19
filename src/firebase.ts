@@ -8,6 +8,7 @@ import {
   onSnapshot,
   getDoc
 } from 'firebase/firestore';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 import { SetoranDana, MustahikProfile, PenyaluranDana } from './types';
 
 const firebaseConfig = {
@@ -22,6 +23,24 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 // Specify the correct firestore custom database ID
 export const db = getFirestore(app, "ai-studio-7522bbef-bc6b-48f9-b85b-247f4b1c32fa");
+export const auth = getAuth(app);
+
+// Sign in anonymously on load
+signInAnonymously(auth)
+  .then(() => {
+    console.log("Firebase: Signed in anonymously successfully!");
+  })
+  .catch((err) => {
+    console.error("Firebase: Anonymous Auth initialization failed:", err);
+  });
+
+export function onAuthReady(onReady: () => void) {
+  return auth.onAuthStateChanged((user) => {
+    if (user) {
+      onReady();
+    }
+  });
+}
 
 // Collection references
 export const setoranCol = collection(db, 'setoran');

@@ -45,7 +45,8 @@ import {
   dbAddPenyaluran, 
   dbUpdatePenyaluran, 
   dbDeletePenyaluran, 
-  dbUpdateRoleCodes 
+  dbUpdateRoleCodes,
+  onAuthReady
 } from './firebase';
 
 // INITIAL SEED DATA FOR FIRST VISIT (Starts completely empty as requested so no non-inputted data is present)
@@ -137,12 +138,25 @@ export default function App() {
   }, [currentUser.role, activeTab]);
 
   // State Keuangan & Data Utama
+  const [isAuthReady, setIsAuthReady] = useState(false);
   const [setoranList, setSetoranList] = useState<SetoranDana[]>([]);
   const [mustahikList, setMustahikList] = useState<MustahikProfile[]>([]);
   const [penyaluranList, setPenyaluranList] = useState<PenyaluranDana[]>([]);
 
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    const unsubAuth = onAuthReady(() => {
+      setIsAuthReady(true);
+    });
+    return () => {
+      unsubAuth();
+    };
+  }, []);
+
   // Synchronize with Firebase Real-time Firestore
   useEffect(() => {
+    if (!isAuthReady) return;
+
     // 1. Initialize default role codes in Firestore once if they are missing
     initializeDefaultRoleCodes(ROLE_CODES);
 
@@ -174,7 +188,7 @@ export default function App() {
       unsubMustahik();
       unsubPenyaluran();
     };
-  }, []);
+  }, [isAuthReady]);
 
   // Actions handlers connected to Cloud Firestore (Realtime Synchronized)
   const handleAddSetoran = (newSetoran: SetoranDana) => {
