@@ -31,187 +31,30 @@ import AsistenCerdas from './components/AsistenCerdas';
 import ProfilLembaga from './components/ProfilLembaga';
 import { SetoranDana, MustahikProfile, PenyaluranDana, UserRole, UserProfile } from './types';
 
-// INITIAL SEED DATA FOR FIRST VISIT
-const INITIAL_SETORAN: SetoranDana[] = [
-  {
-    id: 's-1',
-    muzakkiName: 'Ibu H. Fatimah',
-    phone: '081270009944',
-    alamat: 'Kp. Hadum RT 02 RW 01',
-    amount: 450000,
-    type: 'Zakat Fitrah',
-    paymentMethod: 'Tunai',
-    tanggal: '10 Juni 2026',
-    keterangan: 'Zakat Fitrah keluarga Ibu Fatimah, total 10 jiwa',
-    noKwitansi: 'LAZ-ZF-20260610-4491'
-  },
-  {
-    id: 's-2',
-    muzakkiName: 'Bpk. H. Syukur',
-    phone: '085718223399',
-    alamat: 'Perum Gading Indah Blok C3 No.10',
-    amount: 15000000,
-    type: 'Zakat Mal',
-    paymentMethod: 'Transfer Bank',
-    tanggal: '12 Juni 2026',
-    keterangan: 'Zakat Mal tabungan usaha dagang tahunan',
-    noKwitansi: 'LAZ-ZM-20260612-8812'
-  },
-  {
-    id: 's-3',
-    muzakkiName: 'Hamba Allah',
-    phone: '',
-    alamat: 'Kp. Hadum',
-    amount: 2500000,
-    type: 'Infak',
-    paymentMethod: 'Tunai',
-    tanggal: '14 Juni 2026',
-    keterangan: 'Kotak amal Jum’at Masjid & MDT Al-Jihad',
-    noKwitansi: 'LAZ-IF-20260614-2201'
-  },
-  {
-    id: 's-4',
-    muzakkiName: 'Kel. Bpk. Rudi Purwanto',
-    phone: '081399882200',
-    alamat: 'Kp. Hadum RT 04 RW 02',
-    amount: 1000000,
-    type: 'Sedekah',
-    paymentMethod: 'QRIS',
-    tanggal: '15 Juni 2026',
-    keterangan: 'Sedekah syukuran kelulusan anak',
-    noKwitansi: 'LAZ-SD-20260615-5601'
-  },
-  {
-    id: 's-5',
-    muzakkiName: 'Hamba Allah (Alm. H. Sanusi)',
-    phone: '085322998877',
-    alamat: 'Yayasan Al Hamid',
-    amount: 12000000,
-    type: 'Wakaf',
-    paymentMethod: 'Transfer Bank',
-    tanggal: '16 Juni 2026',
-    keterangan: 'Wakaf sarana sumur bor MDT Al Jihad',
-    noKwitansi: 'LAZ-WK-20260616-9031'
-  }
-];
-
-const INITIAL_MUSTAHIK: MustahikProfile[] = [
-  {
-    id: 'm-1',
-    nama: 'Pak Mamat Saputra',
-    identitasNo: '3201092801550002',
-    phone: '089999221100',
-    alamat: 'Kp. Hadum RT 03 RW 01',
-    asnaf: 'Fakir',
-    penghasilan: 350000,
-    tanggungan: 3,
-    kondisiRumah: 'Dinding kayu rapuh, lantai semen retak, atap bocor parah.',
-    statusVerifikasi: 'Layak',
-    catatanVerifikasi: 'Pemeriksaan lapangan menunjukkan dhuafa tersebut tidak memiliki modal nafkah tetap, kesehatan terganggu.',
-    riwayatBantuanIds: []
-  },
-  {
-    id: 'm-2',
-    nama: 'Ibu Aminah binti Kodir',
-    identitasNo: '3201095503710003',
-    phone: '085711223344',
-    alamat: 'Kp. Hadum RT 01 RW 01, Gg. Musholla',
-    asnaf: 'Miskin',
-    penghasilan: 800000,
-    tanggungan: 4,
-    kondisiRumah: 'Mengontrak bangunan kayu bersekat seng. Menghidupi 4 anak sekolah.',
-    statusVerifikasi: 'Layak',
-    catatanVerifikasi: 'Bekerja sebagai buruh cuci serabutan. Layak diberikan bantuan kebutuhan sembako bulanan.',
-    riwayatBantuanIds: []
-  },
-  {
-    id: 'm-3',
-    nama: 'Pak Rozak Siregar',
-    identitasNo: '3201101212800002',
-    phone: '',
-    alamat: 'Kp. Hadum RT 04 RW 02',
-    asnaf: 'Gharimin',
-    penghasilan: 1200000,
-    tanggungan: 2,
-    kondisiRumah: 'Rumah sederhana warisan orang tua.',
-    statusVerifikasi: 'Belum Diperiksa',
-    catatanVerifikasi: 'Sedang menunggu pemeriksaan berkas bukti rincian resep obat & jeratan hutang rentenir pengobatan anak sakit.',
-    riwayatBantuanIds: []
-  }
-];
-
-const INITIAL_PENYALURAN: PenyaluranDana[] = [
-  {
-    id: 'p-1',
-    noPenyaluran: 'DISB-44122',
-    peruntukanName: 'Sembako Beras & Minyak Kaum Fakir RT 03',
-    mustahikId: 'm-1',
-    mustahikNama: 'Pak Mamat Saputra',
-    asnafTarget: 'Fakir',
-    danaSourceType: 'Zakat Fitrah',
-    amountRequested: 450000,
-    amountApproved: 450000,
-    status: 'Dokumentasi',
-    tanggalUsulan: '11 Juni 2026',
-    tanggalPenyaluran: '12 Juni 2026',
-    diusulkanOleh: 'LAPANGAN',
-    disetujuiOleh: 'KETUA_LAZ',
-    keterangan: 'Penyerahan sembako beras 20kg dan santunan tunai Rp150.000.',
-    buktiFotoUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23ecfdf5"/><circle cx="150" cy="100" r="40" fill="%2334d399" opacity="0.3"/><rect x="110" y="80" width="80" height="40" rx="5" fill="%23047857"/><circle cx="150" cy="100" r="10" fill="white"/><text x="150" y="160" font-family="sans-serif" font-size="11" font-weight="bold" fill="%23065f46" text-anchor="middle">Sembako Beras &amp; Santunan</text><text x="150" y="180" font-family="monospace" font-size="9" fill="%23047857" text-anchor="middle">MDT Al Jihad - Terverifikasi</text></svg>',
-    tandaTerimaDigital: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"><path d="M 10 30 C 30 10, 60 40, 90 20" stroke="%23047857" stroke-width="2" fill="none"/></svg>'
-  },
-  {
-    id: 'p-2',
-    noPenyaluran: 'DISB-88331',
-    peruntukanName: 'Santunan Biaya Renovasi Kelas MDT Al Jihad',
-    asnafTarget: 'Fisabilillah',
-    danaSourceType: 'Wakaf',
-    amountRequested: 8500000,
-    amountApproved: 8500000,
-    status: 'Dokumentasi',
-    tanggalUsulan: '14 Juni 2026',
-    tanggalPenyaluran: '15 Juni 2026',
-    diusulkanOleh: 'SEKRETARIS',
-    disetujuiOleh: 'ADMIN_YAYASAN',
-    keterangan: 'Belanja pasir, semen dan tegel kelas mengaji dhuafa murid Al-Jihad.',
-    buktiFotoUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"><rect width="300" height="200" fill="%23fef3c7"/><circle cx="150" cy="100" r="40" fill="%23f59e0b" opacity="0.3"/><rect x="115" y="85" width="70" height="30" rx="2" fill="%23d97706"/><text x="150" y="150" font-family="sans-serif" font-size="11" font-weight="bold" fill="%2378350f" text-anchor="middle">Renovasi Sarana Kelas</text><text x="150" y="170" font-family="monospace" font-size="9" fill="%23b45309" text-anchor="middle">Yayasan Al Hamid Hadum</text></svg>',
-    tandaTerimaDigital: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"><path d="M 20 20 Q 50 45, 80 15" stroke="%23b45309" stroke-width="3" fill="none"/></svg>'
-  },
-  {
-    id: 'p-3',
-    noPenyaluran: 'DISB-99120',
-    peruntukanName: 'Penyaluran Insentif Bulanan Guru Ngaji MDT',
-    asnafTarget: 'Fisabilillah',
-    danaSourceType: 'Infak',
-    amountRequested: 1500000,
-    amountApproved: 1500000,
-    status: 'Penyaluran',
-    tanggalUsulan: '15 Juni 2026',
-    diusulkanOleh: 'BENDAHARA',
-    disetujuiOleh: 'KETUA_LAZ',
-    keterangan: 'Insentif untuk 3 ustadz pengajar sukarela dhuafa MDT Al Jihad.'
-  }
-];
+// INITIAL SEED DATA FOR FIRST VISIT (Empty by default for real physical logging)
+const INITIAL_SETORAN: SetoranDana[] = [];
+const INITIAL_MUSTAHIK: MustahikProfile[] = [];
+const INITIAL_PENYALURAN: PenyaluranDana[] = [];
 
 const ROLE_CODES = {
   'YYSN88': {
     role: 'admin_yayasan' as UserRole,
     username: 'amil_yayasan',
-    fullName: 'Yusuf Wafa Wibowo, S.Ag',
+    fullName: 'Holid Assad, S.Pd',
     email: 'admin.aljihad@gmail.com',
     label: 'Admin Yayasan'
   },
   'KETUA12': {
     role: 'ketua_laz' as UserRole,
     username: 'amil_ketua',
-    fullName: 'Ustadz Al Hamid, M.Ag',
+    fullName: 'Reni Nurhayani, M.Pd.',
     email: 'ketua.aljihad@gmail.com',
     label: 'Ketua LAZ'
   },
   'BENDA99': {
     role: 'bendahara' as UserRole,
     username: 'amil_bendahara',
-    fullName: 'Ustadzah Nurul Inayah, S.E.I',
+    fullName: 'Rahmi Rahmawati',
     email: 'bendahara.aljihad@gmail.com',
     label: 'Bendahara LAZ'
   },
@@ -232,12 +75,12 @@ const ROLE_CODES = {
 };
 
 const TAB_VISIBILITY: Record<UserRole, string[]> = {
-  admin_yayasan: ['dashboard', 'laporan', 'profil', 'asisten'],
-  ketua_laz: ['dashboard', 'penghimpunan', 'mustahik', 'penyaluran', 'laporan', 'profil', 'asisten'],
-  bendahara: ['dashboard', 'penghimpunan', 'penyaluran', 'laporan', 'profil', 'asisten'],
-  sekretaris: ['dashboard', 'penghimpunan', 'mustahik', 'laporan', 'profil', 'asisten'],
-  bidang_lapangan: ['dashboard', 'penyaluran', 'laporan', 'profil', 'asisten'],
-  donatur: ['dashboard', 'penghimpunan', 'laporan', 'profil', 'asisten'],
+  admin_yayasan: ['dashboard', 'laporan', 'profil', 'bantuan'],
+  ketua_laz: ['dashboard', 'penghimpunan', 'mustahik', 'penyaluran', 'laporan', 'profil', 'bantuan'],
+  bendahara: ['dashboard', 'penghimpunan', 'penyaluran', 'laporan', 'profil', 'bantuan'],
+  sekretaris: ['dashboard', 'penghimpunan', 'mustahik', 'laporan', 'profil', 'bantuan'],
+  bidang_lapangan: ['dashboard', 'penyaluran', 'laporan', 'profil', 'bantuan'],
+  donatur: ['dashboard', 'penghimpunan', 'laporan', 'profil', 'bantuan'],
 };
 
 export default function App() {
@@ -336,6 +179,15 @@ export default function App() {
       }
       return p;
     }));
+  };
+
+  const handleClearAllData = () => {
+    setSetoranList([]);
+    setMustahikList([]);
+    setPenyaluranList([]);
+    localStorage.removeItem('laz_aljihad_setoran');
+    localStorage.removeItem('laz_aljihad_mustahik');
+    localStorage.removeItem('laz_aljihad_penyaluran');
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
@@ -552,17 +404,17 @@ export default function App() {
                   </button>
                 )}
 
-                {TAB_VISIBILITY[currentUser.role]?.includes('asisten') && (
+                {TAB_VISIBILITY[currentUser.role]?.includes('bantuan') && (
                   <button 
-                    onClick={() => setActiveTab('asisten')}
+                    onClick={() => setActiveTab('bantuan')}
                     className={`w-full py-2.5 px-3 rounded-xl flex items-center justify-between text-xs font-bold transition-all ${
-                      activeTab === 'asisten' 
+                      activeTab === 'bantuan' 
                         ? 'bg-emerald-800 text-white shadow' 
                         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-yellow-500 animate-pulse" /> Asisten AI &amp; Bantuan
+                      <HelpCircle className="w-4 h-4 text-emerald-500 animate-pulse" /> Layanan Bantuan WA
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 opacity-60" />
                   </button>
@@ -628,6 +480,7 @@ export default function App() {
               penyaluranList={penyaluranList}
               onNavigate={(tab) => setActiveTab(tab)}
               userRole={currentUser.role}
+              onClearAllData={handleClearAllData}
             />
           )}
 
@@ -668,9 +521,10 @@ export default function App() {
             />
           )}
 
-          {activeTab === 'asisten' && (
+          {activeTab === 'bantuan' && (
             <AsistenCerdas 
               userRole={currentUser.role}
+              currentUser={currentUser}
             />
           )}
 

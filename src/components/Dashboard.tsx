@@ -22,6 +22,7 @@ interface DashboardProps {
   penyaluranList: PenyaluranDana[];
   onNavigate: (tab: string) => void;
   userRole?: UserRole;
+  onClearAllData?: () => void;
 }
 
 export default function Dashboard({ 
@@ -29,8 +30,10 @@ export default function Dashboard({
   mustahikList, 
   penyaluranList,
   onNavigate,
-  userRole
+  userRole,
+  onClearAllData
 }: DashboardProps) {
+  const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false);
   const [fitrahKalkulasi, setFitrahKalkulasi] = useState<number>(45000); // Rp per jiwa standar
   const [jumlahJiwa, setJumlahJiwa] = useState<string>('4');
   const [zakatMalAsset, setZakatMalAsset] = useState<string>('150000000'); // Di atas nisab mitsal 100jt
@@ -393,7 +396,7 @@ export default function Dashboard({
                 IKHTISAR KEUANGAN AMANAH REAL-TIME
               </h3>
               <p className="text-xs text-slate-300 leading-relaxed max-w-xl">
-                Halo <strong>Yusuf Wafa Wibowo, S.Ag</strong>. Anda sedang mengakses dalam mode Pengawas Utama (Admin Yayasan). Sesuai dengan instruksi, menu operasional detail penambahan/pengeditan data disembunyikan. Anda disajikan data ringkasan utuh dari seluruh pos dana filantropi secara transparan dan akuntabel.
+                Halo <strong>Holid Assad, S.Pd</strong>. Anda sedang mengakses dalam mode Pengawas Utama (Admin Yayasan). Sesuai dengan instruksi, menu operasional detail penambahan/pengeditan data disembunyikan. Anda disajikan data ringkasan utuh dari seluruh pos dana filantropi secara transparan dan akuntabel.
               </p>
               
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 pt-4 text-xs font-mono">
@@ -508,6 +511,45 @@ export default function Dashboard({
             <p className="font-mono text-sm font-semibold selection:bg-amber-400">BRI: 4157-01-064388-53-4</p>
             <span className="text-[10px] text-slate-200 block mt-0.5">an. MDT AL JIHAD</span>
           </div>
+
+          {/* Kolom Clear Data Khusus Pengurus */}
+          {userRole !== 'donatur' && (
+            <div className="bg-rose-50 rounded-xl p-4 border border-rose-100 space-y-2.5">
+              <span className="text-[10px] text-rose-800 font-bold block uppercase tracking-wider">Fitur Administrator</span>
+              <p className="text-[11px] text-slate-600 leading-tight">Gunakan tombol di bawah untuk membersihkan semua data penginputan jika ingin memulai ulang sensus baru.</p>
+              
+              {!showConfirmClear ? (
+                <button 
+                  onClick={() => setShowConfirmClear(true)}
+                  className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs py-2 px-3 rounded-lg transition-transform active:scale-95 cursor-pointer text-center"
+                >
+                  Hapus Semua Data (Clear)
+                </button>
+              ) : (
+                <div className="bg-white p-2.5 rounded-lg border border-rose-200 space-y-2">
+                  <p className="text-[10px] text-red-650 font-bold">Apakah Anda yakin? Seluruh data penghimpunan, mustahik, &amp; penyaluran terinput akan dihapus permanen.</p>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => {
+                        onClearAllData?.();
+                        setShowConfirmClear(false);
+                      }}
+                      className="flex-1 bg-red-650 hover:bg-red-700 text-white font-bold text-[10px] py-1.5 rounded cursor-pointer text-center"
+                    >
+                      Ya, Hapus Semua
+                    </button>
+                    <button 
+                      onClick={() => setShowConfirmClear(false)}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[10px] py-1.5 rounded cursor-pointer text-center"
+                    >
+                      Batal
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
         </div>
 
       </div>

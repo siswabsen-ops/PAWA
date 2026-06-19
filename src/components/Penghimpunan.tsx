@@ -536,7 +536,7 @@ export default function Penghimpunan({ setoranList, onAddSetoran, userRole }: Pe
                 <div className="h-10 mt-1 flex items-center justify-center font-serif text-emerald-800 text-[11px] font-bold bg-amber-500/5 rounded border border-amber-500/10 scale-90">
                   ✓ VERIFIED LAZ AD-DIWAN
                 </div>
-                <span className="font-bold text-slate-700 block">Ustadz Al Hamid, M.Ag</span>
+                <span className="font-bold text-slate-700 block font-display">Reni Nurhayani, M.Pd.</span>
               </div>
             </div>
 

@@ -1,103 +1,51 @@
 import React, { useState } from 'react';
 import { 
   Compass, 
-  Send, 
-  Sparkles, 
-  BookOpen, 
   HelpCircle, 
-  Key, 
+  BookOpen, 
+  PhoneCall, 
+  MessageSquare, 
   CheckCircle,
-  Brain,
-  MessageSquare,
-  ArrowRight,
-  ShieldAlert,
-  Loader2
+  ExternalLink,
+  ShieldCheck,
+  Send
 } from 'lucide-react';
-import { ChatMessage } from '../types';
 
 interface AsistenCerdasProps {
   userRole: string;
+  currentUser?: {
+    username: string;
+    fullName: string;
+    role: string;
+    email?: string;
+  };
 }
 
-export default function AsistenCerdas({ userRole }: AsistenCerdasProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      sender: 'assistant',
-      text: 'Assalamualaikum wr. wb. Saya Asisten Cerdas PAWA (Panduan Andal, Karya Sempurna) untuk LAZ MDT Al Jihad. Saya siap membantu Anda memahami hukum Fiqih Zakat, batas amil, memformulasikan naskah sosialisasi amaliah, atau memandu langkah operasional sistem ini. Ada yang bisa saya bantu hari ini?',
-      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-    }
-  ]);
-  const [inputVal, setInputVal] = useState('');
-  const [loading, setLoading] = useState(false);
+export default function AsistenCerdas({ userRole, currentUser }: AsistenCerdasProps) {
+  const [phoneNo, setPhoneNo] = useState('');
+  const [category, setCategory] = useState('Cara Input Setoran Baru');
+  const [message, setMessage] = useState('');
 
-  // Quick Action triggers
-  const promptAsisten = async (queryText: string) => {
-    if (loading) return;
-    
-    const userMsg: ChatMessage = {
-      id: Math.random().toString(),
-      sender: 'user',
-      text: queryText,
-      timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-    };
+  const currentName = currentUser?.fullName || 'Tamu / Umum';
+  const roleName = currentUser?.role === 'donatur' ? 'Muzakki / Donatur Publik' : (
+    currentUser?.role === 'admin_yayasan' ? 'Admin Yayasan' : (
+      currentUser?.role === 'ketua_laz' ? 'Ketua LAZ' : (
+        currentUser?.role === 'bendahara' ? 'Bendahara LAZ' : (
+          currentUser?.role === 'sekretaris' ? 'Sekretaris' : 'Tim Lapangan'
+        )
+      )
+    )
+  );
 
-    setMessages(prev => [...prev, userMsg]);
-    setInputVal('');
-    setLoading(true);
+  // Generate WhatsApp text
+  const waText = `*Pusat Bantuan LAZ Al-Jihad Digital*\n\n` +
+                 `*Nama Pengirim*: ${currentName}\n` +
+                 `*Peran Sistem*: ${roleName}\n` +
+                 `*Nomor HP Terkait*: ${phoneNo || '-'}\n` +
+                 `*Kategori Masalah*: ${category}\n` +
+                 `*Deskripsi Kendala/Pertanyaan*:\n"${message || 'Halo Admin, saya butuh bantuan terkait sistem LAZ.'}"`;
 
-    try {
-      const historyPayload = [...messages, userMsg]
-        .filter((m) => m.id !== 'welcome')
-        .map((m) => ({
-          role: m.sender === 'user' ? 'user' : 'model',
-          text: m.text
-        }));
-
-      const response = await fetch('/api/gemini/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          prompt: queryText,
-          history: historyPayload
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Gagal menghubungi asisten pintar.');
-      }
-
-      const data = await response.json();
-      const replyText = data.text || 'Maaf, saya tidak dapat merespons saat ini. Sila coba beberapa saat lagi.';
-
-      const assistantMsg: ChatMessage = {
-        id: Math.random().toString(),
-        sender: 'assistant',
-        text: replyText,
-        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-      };
-
-      setMessages(prev => [...prev, assistantMsg]);
-    } catch (e: any) {
-      const errorMsg: ChatMessage = {
-        id: Math.random().toString(),
-        sender: 'assistant',
-        text: `Mohon maaf, sistem mengalami kendala koneksi dengan server AI: ${e.message}. Namun secara fiqih, zakat fitrah terhitung 2.5 kg atau 3.5 liter beras atau senilai uang standar BAZNAS setara Rp45.000 per jiwa.`,
-        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, errorMsg]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputVal.trim()) return;
-    promptAsisten(inputVal);
-  };
+  const waUrl = `https://wa.me/628211857851?text=${encodeURIComponent(waText)}`;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -113,9 +61,9 @@ export default function AsistenCerdas({ userRole }: AsistenCerdasProps) {
         <div className="space-y-4 text-xs text-slate-600">
           
           <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1.5">
-            <span className="font-bold text-emerald-900 block">1. Cara Mencatat Dana Masuk</span>
+            <span className="font-bold text-emerald-950 block">1. Cara Mencatat Dana Masuk</span>
             <p className="leading-relaxed">
-              Buka menu <strong>"Penghimpunan"</strong>. Isi nama muzakki/donatur, nomor HP, jumlah nominal, jenis amal (fitrah, mal, infak, sedekah, wakaf) dan klik <strong>"Catat &amp; Ambil Kwitansi"</strong>. Klik tombol <strong>"Cetak"</strong> untuk memunculkan slip PDF resmi.
+              Buka menu <strong>"Penghimpunan"</strong>. Isi nama muzakki/donatur, nomor HP, jumlah nominal, jenis amal (fitrah, mal, infak, sedekah, wakaf) dan klik <strong>"Catat &amp; Ambil Kwitansi"</strong>. Klik tombol <strong>"Cetak"</strong> untuk memunculkan slip PDF resmi beraudit.
             </p>
           </div>
 
@@ -129,7 +77,7 @@ export default function AsistenCerdas({ userRole }: AsistenCerdasProps) {
           <div className="p-3 bg-blue-50 rounded-xl border border-blue-200/60 space-y-1.5">
             <span className="font-bold text-blue-900 block">3. Cara Penyaluran &amp; Tanda Tangan</span>
             <p className="leading-relaxed">
-              Buka menu <strong>"Penyaluran"</strong>. Buat agenda program bantuan. Pipa alur kerja akan mengawal prosesnya. Ketika berstatus <strong>"Penyaluran"</strong>, Anda dapat menekan tombol <strong>"Isi Tanda Terima Digital &amp; Bukti Foto"</strong> untuk menggambar tanda tangan basah di layar secara langsung!
+              Buka menu <strong>"Penyaluran"</strong>. Buat agenda program bantuan. Pipa alur kerja akan mengawal prosesnya. Ketika berstatus <strong>"Penyaluran"</strong>, Anda dapat menekan tombol <strong>"Isi Tanda Terima Digital &amp; Bukti Foto"</strong> untuk menggambar tanda tangan di layar secara langsung!
             </p>
           </div>
 
@@ -144,107 +92,117 @@ export default function AsistenCerdas({ userRole }: AsistenCerdasProps) {
 
       </div>
 
-      {/* Sisi Kanan: Asisten Interaktif Cerdas PAWA */}
-      <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col h-[580px] justify-between">
-        
-        {/* Header Asisten */}
-        <div className="flex justify-between items-center pb-3 border-b border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-emerald-800 flex items-center justify-center text-white shadow-md relative">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
-              <div className="absolute right-0 bottom-0 w-2 h-2 rounded-full bg-emerald-400 border border-white"></div>
-            </div>
-            <div>
-              <h4 className="font-semibold text-slate-800 text-sm font-display">Asisten Cerdas PAWA</h4>
-              <p className="text-[10px] text-emerald-600 font-bold">Panduan Andal, Karya Sempurna</p>
-            </div>
-          </div>
+      {/* Sisi Kanan: Formulir Bantuan WhatsApp Gateway */}
+      <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
+        <div className="space-y-6">
           
-          <div className="text-right text-[10px] text-slate-400 font-mono">
-            <span>Model: Gemini 3.5 Flash</span>
-          </div>
-        </div>
-
-        {/* Chat Messages Log Area */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3 my-2 scrollbar-thin scrollbar-thumb-emerald-100">
-          {messages.map((m) => {
-            const isUser = m.sender === 'user';
-            return (
-              <div 
-                key={m.id} 
-                className={`flex gap-2.5 max-w-[85%] ${isUser ? 'ml-auto flex-row-reverse' : 'mr-auto'}`}
-              >
-                {/* Bubble Avatar */}
-                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${isUser ? 'bg-emerald-800 text-white' : 'bg-amber-100 text-amber-800'}`}>
-                  {isUser ? 'U' : 'P'}
-                </div>
-
-                {/* Bubble chat text body */}
-                <div className={`rounded-2xl p-3.5 text-xs leading-relaxed shadow-sm ${isUser ? 'bg-emerald-850 text-white rounded-tr-none' : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'}`}>
-                  <p className="whitespace-pre-wrap">{m.text}</p>
-                  <span className={`block text-[8px] mt-1 text-right ${isUser ? 'text-emerald-300' : 'text-slate-400'}`}>
-                    {m.timestamp}
-                  </span>
-                </div>
+          {/* Header Bantuan */}
+          <div className="flex justify-between items-center pb-4 border-b border-slate-150">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 shadow-sm">
+                <MessageSquare className="w-5 h-5 text-emerald-700 animate-pulse" />
               </div>
-            );
-          })}
-
-          {loading && (
-            <div className="flex gap-2 mr-auto max-w-[80%] animate-pulse">
-              <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs">
-                <Loader2 className="w-3.5 h-3.5 text-slate-400 animate-spin" />
-              </div>
-              <div className="rounded-2xl p-3 bg-slate-50 border border-slate-100 text-[10px] text-slate-400 italic">
-                PAWA sedang menghitung &amp; merumuskan nasihat syariah...
+              <div>
+                <h4 className="font-bold text-slate-800 text-sm font-display uppercase tracking-tight">Hubungi Layanan WhatsApp Gateway</h4>
+                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Layanan Terpusat Ke No. WA 08211857851</p>
               </div>
             </div>
-          )}
+            
+            <span className="text-[10px] bg-slate-100 text-slate-500 font-mono font-bold px-2 py-1 rounded">
+              ONLINE
+            </span>
+          </div>
+
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+            <span className="text-[10px] text-emerald-800 font-black tracking-widest uppercase block">ℹ️ SISTEM DUKUNGAN OFF-GRID</span>
+            <p className="text-[11px] text-slate-600 leading-relaxed">
+              Halo <strong>{currentName}</strong> ({roleName}). Di sini Anda dapat mengirimkan laporan kendala, pertanyaan syariah, atau usul pengembangan langsung kepada administrator LAZ Al Jihad via server WhatsApp Gateway. Isi formulir berikut guna memudahkan peninjauan.
+            </p>
+          </div>
+
+          {/* Form fields */}
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wide block mb-1">Nama Pengirim</label>
+                <input 
+                  type="text" 
+                  value={currentName} 
+                  disabled 
+                  className="w-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200 px-3 py-2 rounded-xl cursor-not-allowed"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wide block mb-1">Peran Akses</label>
+                <input 
+                  type="text" 
+                  value={roleName} 
+                  disabled 
+                  className="w-full text-xs font-semibold bg-slate-100 text-slate-500 border border-slate-200 px-3 py-2 rounded-xl cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wide block mb-1">Nomor HP Hubungi Balik (Opsional)</label>
+                <input 
+                  type="tel" 
+                  placeholder="Contoh: 0821xxxxxxx" 
+                  value={phoneNo}
+                  onChange={(e) => setPhoneNo(e.target.value)}
+                  className="w-full text-xs font-semibold bg-slate-50 border border-slate-250 px-3 py-2.5 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wide block mb-1">Kategori Bantuan</label>
+                <select 
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full text-xs font-semibold bg-slate-50 border border-slate-250 px-3 py-2.5 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800"
+                >
+                  <option value="Cara Input Setoran Baru">Cara Input Setoran Baru</option>
+                  <option value="Konsultasi Syariat / Hak Amil">Konsultasi Syariat / Hak Amil</option>
+                  <option value="Cetak Kuitansi / Laporan PDF">Cetak Kuitansi / Laporan PDF</option>
+                  <option value="Perbaikan Bug / Saran Sistem">Perbaikan Bug / Saran Sistem</option>
+                  <option value="Koneksi Rekening bank BRI">Koneksi Rekening bank BRI</option>
+                  <option value="Pertanyaan Umum / Lainnya">Pertanyaan Umum / Lainnya</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wide block mb-1">Detail Kendala atau Pertanyaan</label>
+              <textarea 
+                rows={3}
+                placeholder="Tuliskan keluhan atau pesan Anda di sini secara jelas. Misalnya: Kwitansi setoran donasi Zakat Mal #8812 tidak muncul ketika dicetak..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="w-full text-xs bg-slate-50 border border-slate-250 px-3 py-2.5 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 text-slate-800 leading-relaxed"
+                required
+              />
+            </div>
+          </div>
+
         </div>
 
-        {/* Quick Click Question suggestions */}
-        <div className="flex flex-wrap gap-1.5 pb-2 border-t border-slate-100 pt-2 flex-shrink-0">
-          <button 
-            type="button"
-            onClick={() => promptAsisten("Bagaimana pembagian hak amil 12.5% sesuai fiqih?")}
-            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] font-semibold text-left cursor-pointer"
-          >
-            📋 Fiqih Batas Amil 12.5%?
-          </button>
-          <button 
-            type="button"
-            onClick={() => promptAsisten("Bagaimana syarat nisab zakat mal emas?")}
-            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] font-semibold text-left cursor-pointer"
-          >
-            💰 Syarat Nisab Emas?
-          </button>
-          <button 
-            type="button"
-            onClick={() => promptAsisten("Buatkan naskah ajakan berzakat fitrah di MDT Al Jihad")}
-            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-md text-[10px] font-semibold text-left cursor-pointer"
-          >
-            📢 Naskah Ajakan Zakat?
-          </button>
-        </div>
+        {/* Action Button */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+          <p className="text-[10px] text-slate-400 leading-tight">
+            Setelah mengklik kirim, browser Anda akan dialihkan ke aplikasi WhatsApp untuk menyelesaikan pengiriman pesan.
+          </p>
 
-        {/* Input Bar */}
-        <form onSubmit={handleSubmit} className="flex gap-2 flex-shrink-0">
-          <input 
-            type="text"
-            value={inputVal}
-            onChange={(e) => setInputVal(e.target.value)}
-            placeholder="Tanyakan fatwa zakat murtad, nisab, atau cara cetak kuitansi disini..."
-            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            disabled={loading}
-          />
-          <button 
-            type="submit"
-            className="p-2 bg-emerald-800 hover:bg-emerald-950 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center cursor-pointer"
-            disabled={loading || !inputVal.trim()}
+          <a 
+            href={waUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 hover:shadow-lg text-white font-bold text-xs px-5 py-3 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md"
           >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+            <Send className="w-3.5 h-3.5" /> Kirim Bantuan via WhatsApp
+          </a>
+        </div>
 
       </div>
 

@@ -298,19 +298,19 @@ export default function Laporan({ setoranList, penyaluranList, userRole }: Lapor
           <div className="grid grid-cols-3 gap-4 text-xs text-center pt-6">
             <div>
               <span className="text-slate-400 block mb-10">Mewakili Pengurus Yayasan</span>
-              <span className="font-bold text-slate-800 block underline underline-offset-2">H. Wafa Wibowo, S.H.I</span>
+              <span className="font-bold text-slate-800 block underline underline-offset-2">Holid Assad, S.Pd</span>
               <span className="text-[10px] text-slate-400">Pembina Yayasan Al Hamid Hadum</span>
             </div>
 
             <div>
               <span className="text-slate-400 block mb-10">Bendahara Umum LAZ</span>
-              <span className="font-bold text-slate-800 block underline underline-offset-2">Ustadzah Nurul Inayah, S.E.I</span>
+              <span className="font-bold text-slate-800 block underline underline-offset-2">Rahmi Rahmawati</span>
               <span className="text-[10px] text-slate-400">Amil Bendahara</span>
             </div>
 
             <div>
               <span className="text-slate-400 block mb-10">Ketua Pelaksana LAZ</span>
-              <span className="font-bold text-slate-800 block underline underline-offset-2">Ustadz Al Hamid, M.Ag</span>
+              <span className="font-bold text-slate-800 block underline underline-offset-2">Reni Nurhayani, M.Pd.</span>
               <span className="text-[10px] text-slate-400">Direktur Eksekutif</span>
             </div>
           </div>
