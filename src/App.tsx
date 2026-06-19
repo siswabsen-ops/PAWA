@@ -30,24 +30,6 @@ import Laporan from './components/Laporan';
 import AsistenCerdas from './components/AsistenCerdas';
 import ProfilLembaga from './components/ProfilLembaga';
 import { SetoranDana, MustahikProfile, PenyaluranDana, UserRole, UserProfile } from './types';
-import { 
-  initializeDefaultRoleCodes, 
-  subscribeSetoran, 
-  subscribeMustahik, 
-  subscribePenyaluran, 
-  subscribeRoleCodes, 
-  dbAddSetoran, 
-  dbUpdateSetoran, 
-  dbDeleteSetoran, 
-  dbAddMustahik, 
-  dbUpdateMustahik, 
-  dbDeleteMustahik, 
-  dbAddPenyaluran, 
-  dbUpdatePenyaluran, 
-  dbDeletePenyaluran, 
-  dbUpdateRoleCodes,
-  onAuthReady
-} from './firebase';
 
 // INITIAL SEED DATA FOR FIRST VISIT (Starts completely empty as requested so no non-inputted data is present)
 const INITIAL_SETORAN: SetoranDana[] = [];
@@ -120,7 +102,17 @@ export default function App() {
     };
   });
 
-  const [roleCodes, setRoleCodes] = useState<Record<string, { role: UserRole; username: string; fullName: string; email: string; label: string }>>({ ...ROLE_CODES });
+  const [roleCodes, setRoleCodes] = useState<Record<string, { role: UserRole; username: string; fullName: string; email: string; label: string }>>(() => {
+    const saved = localStorage.getItem('laz_aljihad_role_codes');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return { ...ROLE_CODES };
+  });
 
   // State Dialog Login Pengurus
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -138,128 +130,99 @@ export default function App() {
   }, [currentUser.role, activeTab]);
 
   // State Keuangan & Data Utama
-  const [isAuthReady, setIsAuthReady] = useState(false);
-  const [setoranList, setSetoranList] = useState<SetoranDana[]>([]);
-  const [mustahikList, setMustahikList] = useState<MustahikProfile[]>([]);
-  const [penyaluranList, setPenyaluranList] = useState<PenyaluranDana[]>([]);
-
-  // Listen to Firebase Auth state
-  useEffect(() => {
-    const unsubAuth = onAuthReady(() => {
-      setIsAuthReady(true);
-    });
-    return () => {
-      unsubAuth();
-    };
-  }, []);
-
-  // Synchronize with Firebase Real-time Firestore
-  useEffect(() => {
-    if (!isAuthReady) return;
-
-    // 1. Initialize default role codes in Firestore once if they are missing
-    initializeDefaultRoleCodes(ROLE_CODES);
-
-    // 2. Subscribe to roleCodes changes
-    const unsubRoleCodes = subscribeRoleCodes((newCodes) => {
-      if (newCodes && Object.keys(newCodes).length > 0) {
-        setRoleCodes(newCodes as any);
+  const [setoranList, setSetoranList] = useState<SetoranDana[]>(() => {
+    const local = localStorage.getItem('laz_aljihad_setoran_v3');
+    if (local) {
+      try {
+        const parsed = JSON.parse(local) as SetoranDana[];
+        return parsed.filter(item => !item.id.startsWith('sd-')); // ensure no old seeding
+      } catch (err) {
+        return INITIAL_SETORAN;
       }
-    });
+    }
+    return INITIAL_SETORAN;
+  });
 
-    // 3. Subscribe to setoran changes
-    const unsubSetoran = subscribeSetoran((data) => {
-      setSetoranList(data);
-    });
+  const [mustahikList, setMustahikList] = useState<MustahikProfile[]>(() => {
+    const local = localStorage.getItem('laz_aljihad_mustahik_v2');
+    return local ? JSON.parse(local) : INITIAL_MUSTAHIK;
+  });
 
-    // 4. Subscribe to mustahik changes
-    const unsubMustahik = subscribeMustahik((data) => {
-      setMustahikList(data);
-    });
+  const [penyaluranList, setPenyaluranList] = useState<PenyaluranDana[]>(() => {
+    const local = localStorage.getItem('laz_aljihad_penyaluran_v2');
+    return local ? JSON.parse(local) : INITIAL_PENYALURAN;
+  });
 
-    // 5. Subscribe to penyaluran changes
-    const unsubPenyaluran = subscribePenyaluran((data) => {
-      setPenyaluranList(data);
-    });
+  // Sync state to local storage
+  useEffect(() => {
+    localStorage.setItem('laz_aljihad_role_codes', JSON.stringify(roleCodes));
+  }, [roleCodes]);
 
-    return () => {
-      unsubRoleCodes();
-      unsubSetoran();
-      unsubMustahik();
-      unsubPenyaluran();
-    };
-  }, [isAuthReady]);
+  useEffect(() => {
+    localStorage.setItem('laz_aljihad_setoran_v3', JSON.stringify(setoranList));
+  }, [setoranList]);
 
-  // Actions handlers connected to Cloud Firestore (Realtime Synchronized)
+  useEffect(() => {
+    localStorage.setItem('laz_aljihad_mustahik_v2', JSON.stringify(mustahikList));
+  }, [mustahikList]);
+
+  useEffect(() => {
+    localStorage.setItem('laz_aljihad_penyaluran_v2', JSON.stringify(penyaluranList));
+  }, [penyaluranList]);
+
+  // Actions handlers
   const handleAddSetoran = (newSetoran: SetoranDana) => {
-    dbAddSetoran(newSetoran).catch(err => console.error("Error adding setoran to Firestore:", err));
+    setSetoranList(prev => [...prev, newSetoran]);
   };
 
   const handleUpdateSetoran = (updatedSetoran: SetoranDana) => {
-    dbUpdateSetoran(updatedSetoran).catch(err => console.error("Error updating setoran in Firestore:", err));
+    setSetoranList(prev => prev.map(s => s.id === updatedSetoran.id ? updatedSetoran : s));
   };
 
   const handleDeleteSetoran = (id: string) => {
-    dbDeleteSetoran(id).catch(err => console.error("Error deleting setoran from Firestore:", err));
+    setSetoranList(prev => prev.filter(s => s.id !== id));
   };
 
   const handleAddMustahik = (newMustahik: MustahikProfile) => {
-    dbAddMustahik(newMustahik).catch(err => console.error("Error adding mustahik to Firestore:", err));
+    setMustahikList(prev => [...prev, newMustahik]);
   };
 
   const handleVerifyMustahik = (id: string, status: 'Belum Diperiksa' | 'Layak' | 'Tidak Layak', catatan: string) => {
-    const found = mustahikList.find(m => m.id === id);
-    if (!found) return;
-
-    const updated: MustahikProfile = {
-      ...found,
-      statusVerifikasi: status,
-      catatanVerifikasi: catatan,
-      tanggalVerifikasi: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
-    };
-
-    dbUpdateMustahik(updated).catch(err => console.error("Error verifying mustahik in Firestore:", err));
+    setMustahikList(prev => prev.map(m => {
+      if (m.id === id) {
+        return {
+          ...m,
+          statusVerifikasi: status,
+          catatanVerifikasi: catatan,
+          tanggalVerifikasi: new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' })
+        };
+      }
+      return m;
+    }));
   };
 
   const handleAddPenyaluran = (newPenyaluran: PenyaluranDana) => {
-    dbAddPenyaluran(newPenyaluran).catch(err => console.error("Error adding penyaluran to Firestore:", err));
+    setPenyaluranList(prev => [...prev, newPenyaluran]);
   };
 
   const handleUpdatePenyaluranStatus = (id: string, updates: Partial<PenyaluranDana>) => {
-    const found = penyaluranList.find(p => p.id === id);
-    if (!found) return;
-
-    const updated: PenyaluranDana = {
-      ...found,
-      ...updates
-    };
-
-    dbUpdatePenyaluran(updated).catch(err => console.error("Error updating penyaluran status in Firestore:", err));
+    setPenyaluranList(prev => prev.map(p => {
+      if (p.id === id) {
+        return { ...p, ...updates };
+      }
+      return p;
+    }));
   };
 
   const handleUpdateRoleCodes = (newCodes: Record<string, any>) => {
-    dbUpdateRoleCodes(newCodes).catch(err => console.error("Error updating role codes in Firestore:", err));
+    setRoleCodes(newCodes as any);
   };
 
   const handleClearAllData = () => {
-    // Clear list view locally first
     setSetoranList([]);
     setMustahikList([]);
     setPenyaluranList([]);
-
-    // Clear from Firestore
-    setoranList.forEach(item => {
-      dbDeleteSetoran(item.id).catch(err => console.error(err));
-    });
-    mustahikList.forEach(item => {
-      dbDeleteMustahik(item.id).catch(err => console.error(err));
-    });
-    penyaluranList.forEach(item => {
-      dbDeletePenyaluran(item.id).catch(err => console.error(err));
-    });
-
-    // Reset role security codes back to initial factory values in Firestore
-    dbUpdateRoleCodes(ROLE_CODES).catch(err => console.error(err));
+    setRoleCodes({ ...ROLE_CODES });
 
     localStorage.removeItem('laz_aljihad_user');
     localStorage.removeItem('laz_aljihad_setoran');
@@ -269,6 +232,7 @@ export default function App() {
     localStorage.removeItem('laz_aljihad_setoran_v3');
     localStorage.removeItem('laz_aljihad_mustahik_v2');
     localStorage.removeItem('laz_aljihad_penyaluran_v2');
+    localStorage.removeItem('laz_aljihad_role_codes');
   };
 
   const handleLoginSubmit = (e: React.FormEvent) => {
