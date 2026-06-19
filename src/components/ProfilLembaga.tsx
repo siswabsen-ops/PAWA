@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Building2, 
   Target, 
@@ -11,10 +11,94 @@ import {
   Award, 
   ShieldCheck, 
   HeartHandshake,
-  ExternalLink
+  ExternalLink,
+  Lock,
+  Unlock,
+  Key,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
+import { UserProfile, UserRole } from '../types';
 
-export default function ProfilLembaga() {
+interface ProfilLembagaProps {
+  currentUser?: UserProfile;
+  roleCodes?: Record<string, { role: UserRole; username: string; fullName: string; email: string; label: string }>;
+  onUpdateRoleCodes?: (newCodes: Record<string, { role: UserRole; username: string; fullName: string; email: string; label: string }>) => void;
+}
+
+export default function ProfilLembaga({ currentUser, roleCodes, onUpdateRoleCodes }: ProfilLembagaProps) {
+  const [oldPin, setOldPin] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleUpdatePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    if (!roleCodes || !onUpdateRoleCodes || !currentUser) {
+      setErrorMessage('Konfigurasi sistem keamanan tidak merespon.');
+      return;
+    }
+
+    // Find the current code for their role
+    const currentCodeKey = Object.keys(roleCodes).find(
+      key => roleCodes[key].role === currentUser.role
+    );
+
+    if (!currentCodeKey) {
+      setErrorMessage('Terjadi kesalahan: Peran Anda tidak terdaftar dalam database lokal.');
+      return;
+    }
+
+    if (oldPin.trim().toUpperCase() !== currentCodeKey.toUpperCase()) {
+      setErrorMessage('Kode akses lama yang Anda masukkan tidak sesuai. Harap periksa kembali pin Anda!');
+      return;
+    }
+
+    const cleanNewPin = newPin.trim().toUpperCase();
+    if (cleanNewPin.length < 4) {
+      setErrorMessage('Kode akses baru minimal harus terdiri dari 4 karakter.');
+      return;
+    }
+
+    if (cleanNewPin === currentCodeKey.toUpperCase()) {
+      setErrorMessage('Kode akses baru tidak boleh sama dengan kode akses saat ini.');
+      return;
+    }
+
+    if (cleanNewPin !== confirmPin.trim().toUpperCase()) {
+      setErrorMessage('Konfirmasi kode akses baru tidak cocok. Harap ketik ulang untuk kesamaan PIN.');
+      return;
+    }
+
+    // Check conflict: is this dynamic PIN already used by another role?
+    const conflictRole = Object.keys(roleCodes).find(
+      key => key.toUpperCase() === cleanNewPin && roleCodes[key].role !== currentUser.role
+    );
+    if (conflictRole) {
+      setErrorMessage(`Kode akses "${cleanNewPin}" sudah digunakan oleh peran ${roleCodes[conflictRole].label}. Harap gunakan kode unik lain!`);
+      return;
+    }
+
+    // Success - let's replace!
+    const updatedCodes = { ...roleCodes };
+    const roleDetails = updatedCodes[currentCodeKey];
+    delete updatedCodes[currentCodeKey];
+    updatedCodes[cleanNewPin] = roleDetails;
+
+    onUpdateRoleCodes(updatedCodes);
+    setSuccessMessage(`Sukses! Kode akses (${roleDetails.label}) berhasil diubah menjadi "${cleanNewPin}". Harap simpan dan gunakan kode baru ini pada login berikutnya.`);
+    
+    // Clear inputs
+    setOldPin('');
+    setNewPin('');
+    setConfirmPin('');
+  };
+
   return (
     <div className="space-y-6">
       
@@ -149,6 +233,122 @@ export default function ProfilLembaga() {
                 <span className="text-xs font-black text-emerald-800 block mt-0.5">Digital Terpadu</span>
               </div>
             </div>
+          </div>
+
+          {/* KARTU PENGATURAN GANTI KODE AKSES */}
+          <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+              <div className="p-2 bg-amber-50 text-amber-800 rounded-lg">
+                <Lock className="w-5 h-5 text-amber-700 animate-pulse" />
+              </div>
+              <div>
+                <h3 className="font-display font-black text-slate-800 text-sm tracking-tight uppercase">⚙️ Pengaturan Keamanan Kode Akses</h3>
+                <p className="text-[10px] text-slate-400 font-semibold leading-normal">Kustomisasi kode PIN/Password verifikasi untuk para pengurus amil terdaftar.</p>
+              </div>
+            </div>
+
+            {currentUser && currentUser.role !== 'donatur' ? (
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                {errorMessage && (
+                  <div className="bg-red-50 border border-red-200 text-red-800 rounded-xl p-3 text-xs font-semibold flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-650 mt-0.5 animate-bounce" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+
+                {successMessage && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl p-3 text-xs font-bold flex items-start gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-650 shrink-0 mt-0.5 animate-bounce" />
+                    <span>{successMessage}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] text-slate-400 font-bold uppercase tracking-wide block mb-1">Akun Pengurus Aktif</label>
+                    <input 
+                      type="text" 
+                      value={`${currentUser.fullName} (${currentUser.role === 'admin_yayasan' ? 'Admin' : currentUser.role === 'ketua_laz' ? 'Ketua LAZ' : currentUser.role === 'bendahara' ? 'Bendahara' : currentUser.role === 'sekretaris' ? 'Sekretaris' : 'Tim Lapangan'})`} 
+                      disabled 
+                      className="w-full text-xs font-bold bg-slate-100 text-slate-500 border border-slate-200 px-3 py-2.5 rounded-xl cursor-not-allowed"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-450 font-bold uppercase tracking-wide block mb-1 text-slate-550">Kode Akses saat ini (Lama)</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Key className="w-4 h-4" />
+                      </div>
+                      <input 
+                        type="password"
+                        placeholder="Ketik Kode Saat Ini"
+                        value={oldPin}
+                        onChange={(e) => setOldPin(e.target.value)}
+                        required
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-black focus:bg-white focus:outline-emerald-500 tracking-widest text-slate-900 uppercase"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[10px] text-slate-450 font-bold uppercase tracking-wider block mb-1 text-emerald-800">Kode Akses / PIN Baru</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <Lock className="w-4 h-4" />
+                      </div>
+                      <input 
+                        type="password"
+                        placeholder="Contoh: PINBARU9"
+                        value={newPin}
+                        onChange={(e) => setNewPin(e.target.value)}
+                        required
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-emerald-250 rounded-xl text-xs font-mono font-black focus:bg-white focus:outline-emerald-500 tracking-widest text-slate-900 uppercase"
+                      />
+                    </div>
+                    <span className="text-[9px] text-slate-400 mt-1 block font-semibold">Min. 4 karakter (Huruf/Angka)</span>
+                  </div>
+
+                  <div>
+                    <label className="text-[10px] text-slate-455 font-bold uppercase tracking-wider block mb-1 text-emerald-800">Ulangi Kode Baru</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <input 
+                        type="password"
+                        placeholder="Ulangi Kode Baru"
+                        value={confirmPin}
+                        onChange={(e) => setConfirmPin(e.target.value)}
+                        required
+                        className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-emerald-250 rounded-xl text-xs font-mono font-black focus:bg-white focus:outline-emerald-500 tracking-widest text-slate-900 uppercase"
+                      />
+                    </div>
+                    <span className="text-[9px] text-slate-400 mt-1 block font-semibold">Pastikan penulisan kode cocok</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button 
+                    type="submit"
+                    className="bg-emerald-800 hover:bg-emerald-950 text-white font-black text-xs px-5 py-3 rounded-xl flex items-center gap-1.5 transition-all shadow-md cursor-pointer uppercase tracking-wider"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Hubungkan &amp; Simpan Kode Baru
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4 text-center space-y-3">
+                <p className="text-xs text-slate-650 font-medium leading-relaxed">
+                  🔒 Anda saat ini sedang mengakses program sebagai <strong>Masyarakat / Donatur Umum</strong> (tidak memiliki akun pengurus terautentikasi). 
+                </p>
+                <p className="text-[11px] text-slate-400 font-semibold leading-normal">
+                  Hanya pengurus yang masuk (Admin Yayasan, Ketua, Bendahara, Sekretaris, Lapangan) yang dapat memodifikasi password PIN pengaman di panel ini.
+                </p>
+              </div>
+            )}
           </div>
 
         </div>

@@ -168,11 +168,28 @@ export default function App() {
     };
   });
 
+  const [roleCodes, setRoleCodes] = useState<Record<string, { role: UserRole; username: string; fullName: string; email: string; label: string }>>(() => {
+    const saved = localStorage.getItem('laz_aljihad_role_codes');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        // ignore
+      }
+    }
+    return { ...ROLE_CODES };
+  });
+
+  useEffect(() => {
+    localStorage.setItem('laz_aljihad_role_codes', JSON.stringify(roleCodes));
+  }, [roleCodes]);
+
   // State Dialog Login Pengurus
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginCodeInput, setLoginCodeInput] = useState('');
   const [loginError, setLoginError] = useState('');
   const [loginSuccess, setLoginSuccess] = useState('');
+  const [showPinGuide, setShowPinGuide] = useState(false);
 
   // Auto-redirect jika tab tersimpan tidak diperbolehkan untuk peran saat ini
   useEffect(() => {
@@ -279,7 +296,7 @@ export default function App() {
       return;
     }
 
-    const found = ROLE_CODES[code as keyof typeof ROLE_CODES];
+    const found = roleCodes[code];
     if (found) {
       const newUser: UserProfile = {
         username: found.username,
@@ -297,7 +314,7 @@ export default function App() {
         setShowLoginModal(false);
       }, 1200);
     } else {
-      setLoginError('Kode akses salah atau tidak terdaftar. Silakan lihat daftar kode panduan di bawah.');
+      setLoginError('Kode akses salah atau tidak terdaftar. Hubungi Admin Yayasan atau silakan cek daftar Kode Akses di Profil.');
     }
   };
 
@@ -609,7 +626,11 @@ export default function App() {
           )}
 
           {activeTab === 'profil' && (
-            <ProfilLembaga />
+            <ProfilLembaga 
+              currentUser={currentUser}
+              roleCodes={roleCodes}
+              onUpdateRoleCodes={setRoleCodes}
+            />
           )}
 
         </main>
@@ -704,6 +725,31 @@ export default function App() {
                 >
                   Tetap dalam Mode Umum (Donatur / Masyarakat)
                 </button>
+              </div>
+
+              <div className="border-t border-slate-100 pt-3 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowPinGuide(!showPinGuide)}
+                  className="w-full text-center text-[10px] text-emerald-800 font-bold hover:underline cursor-pointer flex items-center justify-center gap-1"
+                >
+                  {showPinGuide ? '▲ Sembunyikan' : '▼ Lihat'} Daftar Kode Akses Berdasarkan Peran
+                </button>
+                
+                {showPinGuide && (
+                  <div className="mt-2 bg-slate-50 rounded-xl p-3 border border-slate-200/60 space-y-1.5 text-[10px] text-slate-600 font-mono">
+                    <span className="font-extrabold text-slate-500 uppercase tracking-widest block mb-1">Kode Akses Aktif:</span>
+                    {(Object.entries(roleCodes) as [string,  any][]).map(([pinCode, userDetails]) => (
+                      <div key={pinCode} className="flex justify-between items-center py-0.5 border-b border-slate-100 last:border-0">
+                        <span className="font-sans font-semibold text-slate-700">{userDetails.label}:</span>
+                        <span className="font-bold text-emerald-800 tracking-wider bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] border border-emerald-100">{pinCode}</span>
+                      </div>
+                    ))}
+                    <span className="text-[9px] text-amber-700 font-sans font-bold block mt-2 text-center leading-normal">
+                      💡 Pengurus yang masuk dapat mengganti Kode Akses ini kapan saja di tab "Profil".
+                    </span>
+                  </div>
+                )}
               </div>
 
             </form>
