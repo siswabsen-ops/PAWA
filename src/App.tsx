@@ -31,8 +31,22 @@ import AsistenCerdas from './components/AsistenCerdas';
 import ProfilLembaga from './components/ProfilLembaga';
 import { SetoranDana, MustahikProfile, PenyaluranDana, UserRole, UserProfile } from './types';
 
-// INITIAL SEED DATA FOR FIRST VISIT (Empty by default for real physical logging)
-const INITIAL_SETORAN: SetoranDana[] = [];
+// INITIAL SEED DATA FOR FIRST VISIT (Pre-populated with requested corrected record)
+const INITIAL_SETORAN: SetoranDana[] = [
+  {
+    id: 'sd-0000',
+    muzakkiName: 'Hamba Allah',
+    phone: '-',
+    alamat: '-',
+    amount: 500000,
+    type: 'Sedekah',
+    paymentMethod: 'Tunai',
+    tanggal: '17 Juni 2026',
+    tahun: '2026',
+    keterangan: 'Sedekah Hamba Allah',
+    noKwitansi: 'LAZ-SD-20260617-0000'
+  }
+];
 const INITIAL_MUSTAHIK: MustahikProfile[] = [];
 const INITIAL_PENYALURAN: PenyaluranDana[] = [];
 
@@ -119,7 +133,34 @@ export default function App() {
   // State Keuangan & Data Utama
   const [setoranList, setSetoranList] = useState<SetoranDana[]>(() => {
     const local = localStorage.getItem('laz_aljihad_setoran_v2');
-    return local ? JSON.parse(local) : INITIAL_SETORAN;
+    let list: SetoranDana[] = local ? JSON.parse(local) : [...INITIAL_SETORAN];
+    
+    // Auto-migrate or auto-correct the specific item
+    const idx = list.findIndex(s => s.noKwitansi === 'LAZ-SD-20260617-0000');
+    if (idx !== -1) {
+      list[idx] = {
+        ...list[idx],
+        amount: 500000, // corrected from 5.000.000 to 500.000
+        muzakkiName: 'Hamba Allah',
+        tanggal: '17 Juni 2026',
+        tahun: '2026'
+      };
+    } else {
+      list.push({
+        id: 'sd-0000',
+        muzakkiName: 'Hamba Allah',
+        phone: '-',
+        alamat: '-',
+        amount: 500000,
+        type: 'Sedekah',
+        paymentMethod: 'Tunai',
+        tanggal: '17 Juni 2026',
+        tahun: '2026',
+        keterangan: 'Sedekah Hamba Allah',
+        noKwitansi: 'LAZ-SD-20260617-0000'
+      });
+    }
+    return list;
   });
 
   const [mustahikList, setMustahikList] = useState<MustahikProfile[]>(() => {

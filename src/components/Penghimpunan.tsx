@@ -59,8 +59,8 @@ export default function Penghimpunan({
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Check roles: Bendahara, Admin/Pengurus Yayasan, Ketua LAZ have entry options
-  const isAllowedToInput = userRole === 'admin_yayasan' || userRole === 'bendahara' || userRole === 'ketua_laz' || userRole === 'sekretaris';
+  // Check roles: Bendahara, Admin/Pengurus Yayasan, Ketua LAZ have entry options + Donatur (testing/umum)
+  const isAllowedToInput = userRole === 'admin_yayasan' || userRole === 'bendahara' || userRole === 'ketua_laz' || userRole === 'sekretaris' || userRole === 'donatur';
 
   const formatRupiah = (num: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -661,7 +661,7 @@ export default function Penghimpunan({
                 <p className="text-[9px] text-slate-400 leading-tight">
                   Di Bawah Naungan Yayasan Al Hamid Hadum<br />
                   SK Kemenag No. 446 / UU No. 23 Thn 2011<br />
-                  Kontak: 0812-7000-9988 | MDT Al Jihad
+                  Kontak: 08211857851 | MDT Al Jihad
                 </p>
               </div>
               <div className="text-right">
