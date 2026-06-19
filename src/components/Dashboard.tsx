@@ -7,7 +7,6 @@ import {
   ArrowUpRight, 
   ArrowDownRight, 
   DollarSign, 
-  Calculator, 
   CheckCircle2, 
   HelpCircle,
   Building2,
@@ -34,9 +33,6 @@ export default function Dashboard({
   onClearAllData
 }: DashboardProps) {
   const [showConfirmClear, setShowConfirmClear] = useState<boolean>(false);
-  const [fitrahKalkulasi, setFitrahKalkulasi] = useState<number>(45000); // Rp per jiwa standar
-  const [jumlahJiwa, setJumlahJiwa] = useState<string>('4');
-  const [zakatMalAsset, setZakatMalAsset] = useState<string>('150000000'); // Di atas nisab mitsal 100jt
   
   // Hitung total dari setoran
   const totalDanaMasuk = setoranList.reduce((sum, item) => sum + item.amount, 0);
@@ -76,22 +72,6 @@ export default function Dashboard({
     { name: 'Sedekah', color: 'bg-lime-50 text-lime-800 border-lime-100', in: getPemasukanByType('Sedekah'), out: getPenyaluranByType('Sedekah') },
     { name: 'Wakaf', color: 'bg-blue-50 text-blue-800 border-blue-101', in: getPemasukanByType('Wakaf'), out: getPenyaluranByType('Wakaf') },
   ];
-
-  // Kalkulasi Cepat Zakat Fitrah
-  const hitungZakatFitrahVal = () => {
-    const jiwa = parseInt(jumlahJiwa) || 0;
-    return jiwa * fitrahKalkulasi;
-  };
-
-  // Kalkulasi Cepat Zakat Mal (2.5% jika mencapai nisab logam mulia mitsal 85 gram emas = ~R100.000.000)
-  const hitungZakatMalVal = () => {
-    const asset = parseFloat(zakatMalAsset) || 0;
-    const nisabEmas = 100000000; // Standar nisab simulasi 85g emas
-    if (asset >= nisabEmas) {
-      return asset * 0.025;
-    }
-    return 0;
-  };
 
   // Hitung rasio penyaluran
   const rasioPenyaluranPercent = totalDanaMasuk > 0 
@@ -243,7 +223,7 @@ export default function Dashboard({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Visualisasi Grafik Dana Masuk & Keluar secara Proporsional */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div className="lg:col-span-3 bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h3 className="font-display font-semibold text-lg text-slate-900">Grafik Posisi Keuangan</h3>
@@ -308,71 +288,6 @@ export default function Dashboard({
             >
               Lihat Detail Laporan Keuangan →
             </button>
-          </div>
-        </div>
-
-        {/* Sisi Kanan: Kalkulator Zakat Interaktif Cepat */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm flex flex-col justify-between">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-emerald-800">
-              <Calculator className="w-5 h-5 text-amber-500" />
-              <h3 className="font-display font-bold text-lg text-slate-900">Kalkulator Zakat</h3>
-            </div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Utiliti hitung cepat nisab dan taksiran kewajiban zakat Fitrah serta zakat Mal pengurus/muzakki.
-            </p>
-
-            <div className="border-b border-slate-100 pb-3">
-              <label className="text-xs font-bold text-slate-700 block mb-1">A. ZAKAT FITRAH</label>
-              <div className="grid grid-cols-2 gap-2 mb-2">
-                <div>
-                  <span className="text-[10px] text-slate-400">Harga Beras/Jiwa (Rp)</span>
-                  <input 
-                    type="number" 
-                    value={fitrahKalkulasi} 
-                    onChange={(e) => setFitrahKalkulasi(parseInt(e.target.value) || 0)}
-                    className="w-full text-xs border border-slate-200 rounded px-2 py-1 mt-0.5 focus:outline-emerald-500"
-                  />
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400">Jumlah Jiwa</span>
-                  <input 
-                    type="number" 
-                    value={jumlahJiwa} 
-                    onChange={(e) => setJumlahJiwa(e.target.value)}
-                    className="w-full text-xs border border-slate-200 rounded px-2 py-1 mt-0.5 focus:outline-emerald-500"
-                  />
-                </div>
-              </div>
-              <div className="bg-emerald-50 p-2 rounded flex justify-between items-center border border-emerald-100">
-                <span className="text-[11px] text-emerald-800 font-medium">Kewajiban Fitrah:</span>
-                <span className="text-xs font-black text-emerald-900">{formatRupiah(hitungZakatFitrahVal())}</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1">B. ZAKAT MAL (Wajib bila &ge; Nisab)</label>
-              <div className="mb-2">
-                <span className="text-[10px] text-slate-400">Total Harta Tersimpan (1 tahun)</span>
-                <input 
-                  type="number" 
-                  value={zakatMalAsset} 
-                  onChange={(e) => setZakatMalAsset(e.target.value)}
-                  className="w-full text-xs border border-slate-200 rounded px-2 py-1 mt-0.5 focus:outline-emerald-500"
-                />
-                <span className="text-[9px] text-slate-400 block mt-0.5">Asumsi nisab perak/emas perakitan: Rp100.000.000</span>
-              </div>
-              <div className="bg-amber-50 p-2 rounded flex justify-between items-center border border-amber-100">
-                <span className="text-[11px] text-amber-800 font-medium font-sans">Kewajiban Mal (2.5%):</span>
-                <span className="text-xs font-black text-amber-900">
-                  {hitungZakatMalVal() > 0 ? formatRupiah(hitungZakatMalVal()) : 'Belum Wajib Nisab'}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-100 text-[10px] text-slate-400 text-center">
-            Sesuai kualifikasi Fatwa MUI No. 14 / UU Pengelolaan Zakat No. 23 Tahun 2011.
           </div>
         </div>
 
